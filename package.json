@@ -1,0 +1,26 @@
+{
+  "name": "slim-fairy",
+  "version": "1.0.0",
+  "description": "Сервис, об Оригинальное название: Фея-похудея.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/l-orlov/slim-fairy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/l-orlov/slim-fairy/issues"
+  },
+  "homepage": "https://github.com/l-orlov/slim-fairy#readme",
+  "dependencies": {
+    "@svgr/webpack": "^6.5.1",
+    "next": "^13.1.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

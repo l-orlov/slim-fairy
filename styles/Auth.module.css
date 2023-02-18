@@ -1,0 +1,27 @@
+.formAuth {
+    height: max-content;
+    width: 550px;
+    text-align: center;
+    justify-content: center;
+    margin-top: 75px;
+    /* display: flex; */
+}
+
+.blockInForm {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.form {
+    height: max-content;
+    width: 550px;
+    margin-top: 60px;
+}
+
+.h1 {
+    text-transform: uppercase;
+    color: #5B5F5C;
+    font-family: Roboto, sans-serif;
+    font-weight: 500;
+}

@@ -1,0 +1,29 @@
+.inputBox {
+    background: #D9D9D9;
+    border-radius: 35px;
+    border: none;
+    height: 30px;
+    width: 100%;
+    padding: 5px 17px;
+    color: #5B5F5C;
+    font-size: 15px;
+}
+.inputBox:focus {
+    outline: 5px #1A8B25;
+}
+
+.inputLabel {
+    font-size: 16px;
+    text-transform: uppercase;
+    color: #5B5F5C;
+    font-family: Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+    width: 105px;
+}
+
+.inputWithLabel {
+    display: flex;
+    margin-bottom: 30px;
+}

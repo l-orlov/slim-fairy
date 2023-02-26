@@ -27,9 +27,11 @@ func (h *Handler) signInClient(c *gin.Context) {
 		msg := "failed to sign-in client"
 		if errors.Is(err, store.ErrNotFound) {
 			h.writeErrorResponse(c, http.StatusNotFound, msg)
+			return
 		}
 		if errors.Is(err, service.ErrWrongPassword) {
-			h.writeErrorResponse(c, http.StatusUnauthorized, msg)
+			h.writeErrorResponse(c, http.StatusUnauthorized, "wrong password")
+			return
 		}
 
 		h.writeErrorResponse(c, http.StatusInternalServerError, msg)

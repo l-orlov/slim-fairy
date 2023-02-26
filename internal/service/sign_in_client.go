@@ -23,12 +23,7 @@ func (svc *Service) SignInClient(
 		return "", errors.Wrap(err, "svs.storage.GetAuthDataBySourceIDAndType")
 	}
 
-	hashedPassword, err := model.HashPassword(clientToSignIn.Password)
-	if err != nil {
-		return "", errors.Wrap(err, "model.HashPassword")
-	}
-
-	if hashedPassword != authData.Password {
+	if !model.CheckPasswordHash(authData.Password, clientToSignIn.Password) {
 		return "", ErrWrongPassword
 	}
 

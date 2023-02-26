@@ -1,4 +1,4 @@
-package db
+package store
 
 import (
 	"github.com/jackc/pgx/v5"
@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	// ErrNotFound - запись не найдена
+	// ErrNotFound is error that record not found
 	ErrNotFound = errors.New("record not found")
 )
 

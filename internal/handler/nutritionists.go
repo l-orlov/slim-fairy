@@ -22,7 +22,7 @@ func (h *Handler) getNutritionistByID(c *gin.Context) {
 		return
 	}
 
-	client, err := h.storage.GetNutritionistByID(c, id)
+	user, err := h.storage.GetNutritionistByID(c, id)
 	if err != nil {
 		log.Printf("h.storage.GetNutritionistByID: %v", err)
 
@@ -35,5 +35,5 @@ func (h *Handler) getNutritionistByID(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, client)
+	c.IndentedJSON(http.StatusOK, user)
 }

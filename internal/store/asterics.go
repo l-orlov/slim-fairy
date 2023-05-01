@@ -9,11 +9,11 @@ import (
 )
 
 // Column names for models
-var asteriskClients, asteriskNutritionists, asteriskAuthData string
+var asteriskUsers, asteriskNutritionists, asteriskAuthData string
 
 func init() {
 	// Init column names for models
-	asteriskClients = asterisk(model.Client{})
+	asteriskUsers = asterisk(model.User{})
 	asteriskNutritionists = asterisk(model.Nutritionist{})
 	asteriskAuthData = asterisk(model.AuthData{})
 }

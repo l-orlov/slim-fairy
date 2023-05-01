@@ -26,23 +26,23 @@ func New(
 
 	auth := router.Group("/auth")
 	{
-		authClients := auth.Group("/clients")
+		authUsers := auth.Group("/users")
 		{
-			authClients.POST("/sign-up", h.registerClient)
-			authClients.POST("/sign-in", h.signInClient)
+			authUsers.POST("/sign-up", h.registerUser)
+			authUsers.POST("/sign-in", h.signInUser)
 		}
 		//authNutritionists := auth.Group("/nutritionists")
 		{
-			//auth.POST("/sign-up", h.registerClient)
+			//auth.POST("/sign-up", h.registerUser)
 			//auth.POST("/sign-in", h.SignIn)
 		}
 	}
 
 	api := router.Group("/api")
 	{
-		clients := api.Group("/clients")
+		users := api.Group("/users")
 		{
-			clients.GET("/:id", h.getClientByID)
+			users.GET("/:id", h.getUserByID)
 		}
 		nutritionists := api.Group("/nutritionists")
 		{

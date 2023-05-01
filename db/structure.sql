@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 14.6 (Debian 14.6-1.pgdg110+1)
--- Dumped by pg_dump version 14.6 (Homebrew)
+-- Dumped by pg_dump version 14.7 (Homebrew)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -53,24 +53,6 @@ CREATE TABLE public.auth_data (
 
 
 --
--- Name: clients; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.clients (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name text DEFAULT ''::text NOT NULL,
-    email text DEFAULT ''::text NOT NULL,
-    phone text DEFAULT ''::text NOT NULL,
-    age integer DEFAULT 0 NOT NULL,
-    weight integer DEFAULT 0 NOT NULL,
-    height integer DEFAULT 0 NOT NULL,
-    gender integer DEFAULT 0 NOT NULL,
-    created_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
-    updated_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
-);
-
-
---
 -- Name: goose_db_version; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -109,11 +91,31 @@ ALTER SEQUENCE public.goose_db_version_id_seq OWNED BY public.goose_db_version.i
 CREATE TABLE public.nutritionists (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name text DEFAULT ''::text NOT NULL,
-    email text DEFAULT ''::text NOT NULL,
-    phone text DEFAULT ''::text NOT NULL,
-    age integer DEFAULT 0 NOT NULL,
-    gender integer DEFAULT 0 NOT NULL,
-    info text DEFAULT ''::text NOT NULL,
+    email text,
+    phone text,
+    telegram_id text,
+    age integer,
+    gender integer,
+    info text,
+    created_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    updated_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+);
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text DEFAULT ''::text NOT NULL,
+    email text,
+    phone text,
+    telegram_id text,
+    age integer,
+    weight integer,
+    height integer,
+    gender integer,
     created_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
     updated_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
 );
@@ -124,14 +126,6 @@ CREATE TABLE public.nutritionists (
 --
 
 ALTER TABLE ONLY public.goose_db_version ALTER COLUMN id SET DEFAULT nextval('public.goose_db_version_id_seq'::regclass);
-
-
---
--- Name: clients clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.clients
-    ADD CONSTRAINT clients_pkey PRIMARY KEY (id);
 
 
 --
@@ -151,17 +145,18 @@ ALTER TABLE ONLY public.nutritionists
 
 
 --
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: auth_data_source_id_source_type_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX auth_data_source_id_source_type_idx ON public.auth_data USING btree (source_id, source_type);
-
-
---
--- Name: clients_email_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX clients_email_idx ON public.clients USING btree (email);
 
 
 --
@@ -172,6 +167,41 @@ CREATE UNIQUE INDEX nutritionists_email_idx ON public.nutritionists USING btree 
 
 
 --
+-- Name: nutritionists_phone_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX nutritionists_phone_idx ON public.nutritionists USING btree (phone);
+
+
+--
+-- Name: nutritionists_telegram_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX nutritionists_telegram_id_idx ON public.nutritionists USING btree (telegram_id);
+
+
+--
+-- Name: users_email_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX users_email_idx ON public.users USING btree (email);
+
+
+--
+-- Name: users_phone_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX users_phone_idx ON public.users USING btree (phone);
+
+
+--
+-- Name: users_telegram_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX users_telegram_id_idx ON public.users USING btree (telegram_id);
+
+
+--
 -- Name: auth_data update_auth_data_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -179,17 +209,17 @@ CREATE TRIGGER update_auth_data_updated_at BEFORE UPDATE ON public.auth_data FOR
 
 
 --
--- Name: clients update_clients_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER update_clients_updated_at BEFORE UPDATE ON public.clients FOR EACH ROW EXECUTE FUNCTION public.set_updated_at_column();
-
-
---
 -- Name: nutritionists update_nutritionists_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER update_nutritionists_updated_at BEFORE UPDATE ON public.nutritionists FOR EACH ROW EXECUTE FUNCTION public.set_updated_at_column();
+
+
+--
+-- Name: users update_users_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.set_updated_at_column();
 
 
 --

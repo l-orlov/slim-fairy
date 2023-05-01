@@ -11,20 +11,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (h *Handler) signInClient(c *gin.Context) {
-	client := &model.ClientToSignIn{}
-	err := c.BindJSON(client)
+func (h *Handler) signInUser(c *gin.Context) {
+	user := &model.UserToSignIn{}
+	err := c.BindJSON(user)
 	if err != nil {
 		log.Printf("c.BindJSON: %v", err)
 		h.writeErrorResponse(c, http.StatusBadRequest, "invalid request")
 		return
 	}
 
-	token, err := h.svc.SignInClient(c, client)
+	token, err := h.svc.SignInUser(c, user)
 	if err != nil {
-		log.Printf("h.svc.SignInClient: %v", err)
+		log.Printf("h.svc.SignInUser: %v", err)
 
-		msg := "failed to sign-in client"
+		msg := "failed to sign-in user"
 		if errors.Is(err, store.ErrNotFound) {
 			h.writeErrorResponse(c, http.StatusNotFound, msg)
 			return

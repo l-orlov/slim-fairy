@@ -12,11 +12,20 @@ type (
 		PgDSN         string `mapstructure:"PG_DSN"`
 		ServerAddress string `mapstructure:"SERVER_ADDRESS"`
 		JWTToken      `mapstructure:",squash"`
+		TelegramBot   `mapstructure:",squash"`
+		AIConfig      `mapstructure:",squash"`
 	}
 	JWTToken struct {
 		Lifitime time.Duration `mapstructure:"TOKEN_LIFETIME"`
 		Issuer   string        `mapstructure:"TOKEN_ISSUER"`
 		Secret   string        `mapstructure:"TOKEN_SECRET"`
+	}
+	TelegramBot struct {
+		Token string `mapstructure:"TG_BOT_TOKEN"`
+	}
+	AIConfig struct {
+		APIKey   string `mapstructure:"API_KEY"`
+		UseMocks bool   `mapstructure:"AI_USE_MOCKS"`
 	}
 )
 
@@ -29,7 +38,7 @@ var (
 func Load(path string) (err error) {
 	once.Do(func() {
 		viper.AddConfigPath(path)
-		viper.SetConfigName("app")
+		viper.SetConfigName("app_prod")
 		viper.SetConfigType("env")
 
 		viper.AutomaticEnv()

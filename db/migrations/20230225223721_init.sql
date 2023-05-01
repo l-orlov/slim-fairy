@@ -10,61 +10,69 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TABLE clients
+CREATE TABLE users
 (
-    id         uuid PRIMARY KEY     DEFAULT gen_random_uuid(),
-    name       text        NOT NULL DEFAULT '',
-    email      text        NOT NULL DEFAULT '',
-    phone      text        NOT NULL DEFAULT '',
-    age        int         NOT NULL DEFAULT 0,
-    weight     int         NOT NULL DEFAULT 0,
-    height     int         NOT NULL DEFAULT 0,
-    gender     int         NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc'),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc')
+    id                      uuid PRIMARY KEY     DEFAULT gen_random_uuid(),
+    name                    text        NOT NULL DEFAULT '',
+    email                   text,
+    phone                   text,
+    telegram_id             text,
+    age                     int,
+    weight                  int,
+    height                  int,
+    gender                  int,
+    physical_activity_level int,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc'),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc')
 );
 
-COMMENT ON TABLE clients IS 'Clients';
-COMMENT ON COLUMN clients.id IS 'Client ID';
-COMMENT ON COLUMN clients.name IS 'Client Name';
-COMMENT ON COLUMN clients.email IS 'Client Email';
-COMMENT ON COLUMN clients.phone IS 'Client Phone';
-COMMENT ON COLUMN clients.age IS 'Client Age';
-COMMENT ON COLUMN clients.weight IS 'Client Weight';
-COMMENT ON COLUMN clients.height IS 'Client Height';
-COMMENT ON COLUMN clients.gender IS 'Client Gender';
-COMMENT ON COLUMN clients.created_at IS 'Create date';
-COMMENT ON COLUMN clients.updated_at IS 'Update date';
+COMMENT ON TABLE users IS 'Users';
+COMMENT ON COLUMN users.id IS 'ID';
+COMMENT ON COLUMN users.name IS 'Name';
+COMMENT ON COLUMN users.email IS 'Email';
+COMMENT ON COLUMN users.phone IS 'Phone';
+COMMENT ON COLUMN users.telegram_id IS 'Telegram ID';
+COMMENT ON COLUMN users.age IS 'Age';
+COMMENT ON COLUMN users.weight IS 'Weight';
+COMMENT ON COLUMN users.height IS 'Height';
+COMMENT ON COLUMN users.gender IS 'Gender';
+COMMENT ON COLUMN users.physical_activity_level IS 'Physical activity level';
+COMMENT ON COLUMN users.created_at IS 'Create date';
+COMMENT ON COLUMN users.updated_at IS 'Update date';
 
-CREATE TRIGGER update_clients_updated_at
+CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE
-    ON clients
+    ON users
     FOR EACH ROW
 EXECUTE PROCEDURE set_updated_at_column();
 
-CREATE UNIQUE INDEX ON clients USING btree (email);
+CREATE UNIQUE INDEX ON users USING btree (email);
+CREATE UNIQUE INDEX ON users USING btree (phone);
+CREATE UNIQUE INDEX ON users USING btree (telegram_id);
 
 CREATE TABLE nutritionists
 (
-    id         uuid PRIMARY KEY     DEFAULT gen_random_uuid(),
-    name       text        NOT NULL DEFAULT '',
-    email      text        NOT NULL DEFAULT '',
-    phone      text        NOT NULL DEFAULT '',
-    age        int         NOT NULL DEFAULT 0,
-    gender     int         NOT NULL DEFAULT 0,
-    info       text        NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc'),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc')
+    id          uuid PRIMARY KEY     DEFAULT gen_random_uuid(),
+    name        text        NOT NULL DEFAULT '',
+    email       text,
+    phone       text,
+    telegram_id text,
+    age         int,
+    gender      int,
+    info        text,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc'),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc')
 );
 
 COMMENT ON TABLE nutritionists IS 'Nutritionists';
-COMMENT ON COLUMN nutritionists.id IS 'Nutritionist ID';
-COMMENT ON COLUMN nutritionists.name IS 'Nutritionist Name';
-COMMENT ON COLUMN nutritionists.email IS 'Nutritionist Email';
-COMMENT ON COLUMN nutritionists.phone IS 'Nutritionist Phone';
-COMMENT ON COLUMN nutritionists.age IS 'Nutritionist Age';
-COMMENT ON COLUMN nutritionists.gender IS 'Nutritionist Gender';
-COMMENT ON COLUMN nutritionists.info IS 'Nutritionist Info';
+COMMENT ON COLUMN nutritionists.id IS 'ID';
+COMMENT ON COLUMN nutritionists.name IS 'Name';
+COMMENT ON COLUMN nutritionists.email IS 'Email';
+COMMENT ON COLUMN nutritionists.phone IS 'Phone';
+COMMENT ON COLUMN users.telegram_id IS 'Telegram ID';
+COMMENT ON COLUMN nutritionists.age IS 'Age';
+COMMENT ON COLUMN nutritionists.gender IS 'Gender';
+COMMENT ON COLUMN nutritionists.info IS 'Info';
 COMMENT ON COLUMN nutritionists.created_at IS 'Create date';
 COMMENT ON COLUMN nutritionists.updated_at IS 'Update date';
 
@@ -75,6 +83,8 @@ CREATE TRIGGER update_nutritionists_updated_at
 EXECUTE PROCEDURE set_updated_at_column();
 
 CREATE UNIQUE INDEX ON nutritionists USING btree (email);
+CREATE UNIQUE INDEX ON nutritionists USING btree (phone);
+CREATE UNIQUE INDEX ON nutritionists USING btree (telegram_id);
 
 CREATE TABLE auth_data
 (
@@ -103,7 +113,7 @@ CREATE UNIQUE INDEX ON auth_data USING btree (source_id, source_type);
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS clients;
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS nutritionists;
 DROP TABLE IF EXISTS auth_data;
 -- +goose StatementEnd

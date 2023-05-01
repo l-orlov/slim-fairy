@@ -56,11 +56,12 @@ func (s *Storage) GetNutritionistByID(ctx context.Context, id uuid.UUID) (*model
 
 func nutritionistAttrs(record *model.Nutritionist) map[string]interface{} {
 	return map[string]interface{}{
-		"name":   record.Name,
-		"email":  record.Email,
-		"phone":  record.Phone,
-		"age":    record.Age,
-		"gender": record.Gender,
-		"info":   record.Info,
+		"name":        record.Name,
+		"email":       record.Email,
+		"phone":       record.Phone,
+		"telegram_id": record.TelegramID,
+		"age":         record.Age,
+		"gender":      record.Gender,
+		"info":        record.Info,
 	}
 }

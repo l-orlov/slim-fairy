@@ -26,7 +26,7 @@ type AuthDataSourceType string
 
 // AuthDataSourceType values
 const (
-	AuthDataSourceTypeClient       = AuthDataSourceType("client")       // Client
+	AuthDataSourceTypeUser         = AuthDataSourceType("user")         // User
 	AuthDataSourceTypeNutritionist = AuthDataSourceType("nutritionist") // Nutritionist
 )
 

@@ -58,7 +58,7 @@ func New(token string, menuGetter lhandlers.MenuGetter) (*Bot, error) {
 	// /start command to introduce the bot
 	dispatcher.AddHandler(handlers.NewCommand("start", logicHandlers.Start))
 	// /source command to send the bot source code
-	dispatcher.AddHandler(handlers.NewCommand("diet-menu", logicHandlers.GetDietMenu))
+	dispatcher.AddHandler(handlers.NewCommand("getdietfromai", logicHandlers.GetDietMenuFromAI))
 
 	dispatcher.AddHandler(handlers.NewConversation(
 		[]ext.Handler{handlers.NewCommand("register", logicHandlers.StartUserRegistration)},

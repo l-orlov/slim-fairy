@@ -10,7 +10,13 @@ import (
 
 const (
 	// TODO: fix
-	startMsgTemplate = "Hello, I'm @%s. I <b>repeat</b> all your messages."
+	startMsgTemplate = `
+Привет! Я @%s. Помогу тебе составить план питания.
+Список доступных команд:
+/start
+/register
+/getdietfromai
+`
 )
 
 // Start introduces the bot.

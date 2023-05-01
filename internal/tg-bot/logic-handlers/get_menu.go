@@ -16,7 +16,7 @@ const (
 )
 
 // TODO: fix. get user params from db and fill if no mocks
-func (h *LogicHandlers) GetDietMenu(b *gotgbot.Bot, ctx *ext.Context) error {
+func (h *LogicHandlers) GetDietMenuFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 	log.Printf("user id: %v", ctx.EffectiveSender.User.Id)
 
 	executionCtx := context.Background()

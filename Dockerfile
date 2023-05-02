@@ -30,6 +30,7 @@ RUN go mod verify
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ./.bin/service ./cmd/slim-fairy/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ./.bin/tg-bot ./cmd/tg-bot/main.go
 
 ############################
 # STEP 2 build a small image
@@ -46,10 +47,12 @@ WORKDIR /app/
 
 # Copy our static executable and needed files.
 COPY --from=builder /builder/.bin/service .
-COPY --from=builder /builder/configs/app.env configs/app.env
+COPY --from=builder /builder/.bin/tg-bot .
+COPY --from=builder /builder/configs/ configs/
+COPY --from=builder /builder/assets/ assets/
 
 # Use an unprivileged user.
 USER appuser:appuser
 
 # Run the binary.
-ENTRYPOINT ["./service"]
+CMD ["./service"]

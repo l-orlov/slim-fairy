@@ -5,6 +5,7 @@ import (
 
 	"github.com/l-orlov/slim-fairy/internal/model"
 	"github.com/l-orlov/slim-fairy/internal/store"
+	"github.com/l-orlov/slim-fairy/pkg/ptrconv"
 	"github.com/pkg/errors"
 )
 
@@ -14,12 +15,12 @@ func (svc *Service) RegisterUser(
 ) (*model.User, error) {
 	user := &model.User{
 		Name:   userToReg.Name,
-		Email:  userToReg.Email,
-		Phone:  userToReg.Phone,
-		Age:    userToReg.Age,
-		Weight: userToReg.Weight,
-		Height: userToReg.Height,
-		Gender: userToReg.Gender,
+		Email:  ptrconv.Ptr(userToReg.Email),
+		Phone:  ptrconv.Ptr(userToReg.Phone),
+		Age:    ptrconv.Ptr(userToReg.Age),
+		Weight: ptrconv.Ptr(userToReg.Weight),
+		Height: ptrconv.Ptr(userToReg.Height),
+		Gender: ptrconv.Ptr(userToReg.Gender),
 	}
 
 	password, err := model.HashPassword(userToReg.Password)

@@ -25,7 +25,7 @@ func New() *Client {
 	return &Client{}
 }
 
-func (c *Client) GetMenuByParams(ctx context.Context, params model.GetMenuParams) (string, error) {
+func (c *Client) GetDietByParams(ctx context.Context, params model.GetDietParams) (string, error) {
 	fileNum := rand.Int31n(mocksNumber)
 	path := fmt.Sprintf(mockFilePathTemplate, fileNum)
 

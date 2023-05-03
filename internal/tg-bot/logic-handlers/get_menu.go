@@ -16,13 +16,13 @@ const (
 )
 
 // TODO: fix. get user params from db and fill if no mocks
-func (h *LogicHandlers) GetDietMenuFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
+func (h *LogicHandlers) GetDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 	log.Printf("user id: %v", ctx.EffectiveSender.User.Id)
 
 	executionCtx := context.Background()
-	menuStr, err := h.menuGetter.GetMenuByParams(executionCtx, model.GetMenuParams{})
+	menuStr, err := h.menuGetter.GetDietByParams(executionCtx, model.GetDietParams{})
 	if err != nil {
-		return errors.Wrap(err, "h.menuGetter.GetMenuByParams")
+		return errors.Wrap(err, "h.menuGetter.GetDietByParams")
 	}
 
 	reader := strings.NewReader(menuStr)
@@ -31,7 +31,7 @@ func (h *LogicHandlers) GetDietMenuFromAI(b *gotgbot.Bot, ctx *ext.Context) erro
 		File:     reader,
 		FileName: menuFileName,
 	}, &gotgbot.SendDocumentOpts{
-		Caption:          "Here is diet menu",
+		Caption:          "Вот диета для тебя от ИИ (Искусственного Интеллекта)",
 		ReplyToMessageId: ctx.EffectiveMessage.MessageId,
 	})
 	if err != nil {

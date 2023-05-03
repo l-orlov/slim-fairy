@@ -7,16 +7,16 @@ import (
 )
 
 type (
-	MenuGetter interface {
-		GetMenuByParams(ctx context.Context, params model.GetMenuParams) (string, error)
+	DietGetter interface {
+		GetDietByParams(ctx context.Context, params model.GetDietParams) (string, error)
 	}
 
 	LogicHandlers struct {
-		menuGetter MenuGetter
+		menuGetter DietGetter
 	}
 )
 
-func New(menuGetter MenuGetter) *LogicHandlers {
+func New(menuGetter DietGetter) *LogicHandlers {
 	return &LogicHandlers{
 		menuGetter: menuGetter,
 	}

@@ -1,7 +1,7 @@
 package model
 
 type (
-	GetMenuParams struct {
+	GetDietParams struct {
 		// TODO: some params
 	}
 )

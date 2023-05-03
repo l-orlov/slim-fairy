@@ -12,11 +12,14 @@ const (
 	// TODO: fix
 	startMsgTemplate = `
 Привет! Я @%s. Помогу тебе составить план питания.
-Список доступных команд:
+Ниже список доступных команд.
+
+Начальная информация:
 /start
+Регистрация:
 /register
-/getdietfromai
-`
+Получение диеты от ИИ:
+/getdietfromai`
 )
 
 // Start introduces the bot.

@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-/*
+/* TODO:
 1. отдавать в сообщениях файлы с меню
 2. добавить цепочку диалога и регистрации
 3. добавить поход в чат гпт
@@ -27,7 +27,7 @@ type (
 	}
 )
 
-func New(token string, menuGetter lhandlers.MenuGetter) (*Bot, error) {
+func New(token string, menuGetter lhandlers.DietGetter) (*Bot, error) {
 	b, err := gotgbot.NewBot(token, &gotgbot.BotOpts{
 		Client: http.Client{},
 		DefaultRequestOpts: &gotgbot.RequestOpts{
@@ -55,19 +55,24 @@ func New(token string, menuGetter lhandlers.MenuGetter) (*Bot, error) {
 	})
 	dispatcher := updater.Dispatcher
 
-	// /start command to introduce the bot
+	// command to introduce the bot
 	dispatcher.AddHandler(handlers.NewCommand("start", logicHandlers.Start))
-	// /source command to send the bot source code
-	dispatcher.AddHandler(handlers.NewCommand("getdietfromai", logicHandlers.GetDietMenuFromAI))
-
+	// command to get diet menu from AI
+	dispatcher.AddHandler(handlers.NewCommand("getdietfromai", logicHandlers.GetDietFromAI))
+	// command to register user
 	dispatcher.AddHandler(handlers.NewConversation(
 		[]ext.Handler{handlers.NewCommand("register", logicHandlers.StartUserRegistration)},
 		map[string][]ext.Handler{
-			lhandlers.RegisterName: {handlers.NewMessage(noCommands, logicHandlers.RegisterUserName)},
-			lhandlers.RegisterAge:  {handlers.NewMessage(noCommands, logicHandlers.RegisterUserAge)},
+			lhandlers.RegisterName:             {handlers.NewMessage(noCommands, logicHandlers.RegisterUserName)},
+			lhandlers.RegisterAge:              {handlers.NewMessage(noCommands, logicHandlers.RegisterUserAge)},
+			lhandlers.RegisterWeight:           {handlers.NewMessage(noCommands, logicHandlers.RegisterUserWeight)},
+			lhandlers.RegisterHeight:           {handlers.NewMessage(noCommands, logicHandlers.RegisterUserHeight)},
+			lhandlers.RegisterGender:           {handlers.NewMessage(noCommands, logicHandlers.RegisterUserGender)},
+			lhandlers.RegisterPhysicalActivity: {handlers.NewMessage(noCommands, logicHandlers.RegisterUserPhysicalActivity)},
+			lhandlers.RegisterConfirm:          {handlers.NewMessage(noCommands, logicHandlers.ConfirmUserRegistration)},
 		},
 		&handlers.ConversationOpts{
-			Exits:        []ext.Handler{handlers.NewCommand("cancel-registration", logicHandlers.CancelUserRegistration)},
+			Exits:        []ext.Handler{handlers.NewCommand("cancelreg", logicHandlers.CancelUserRegistration)},
 			StateStorage: conversation.NewInMemoryStorage(conversation.KeyStrategySenderAndChat),
 		},
 	))

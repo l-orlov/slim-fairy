@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/v2/pgxscan"
@@ -10,6 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/l-orlov/slim-fairy/internal/config"
 	"github.com/pkg/errors"
+)
+
+const (
+	//defaultTimeout = 3 * time.Second
+	defaultTimeout = 30 * time.Minute // TODO: fix
 )
 
 type Storage struct {
@@ -39,7 +45,10 @@ func psql() sq.StatementBuilderType {
 
 // Select executes select query
 func Select(ctx context.Context, db pgxscan.Querier, dst interface{}, query string, args ...interface{}) error {
-	return pgxscan.Select(ctx, db, dst, query, args...)
+	dbCtx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	return pgxscan.Select(dbCtx, db, dst, query, args...)
 }
 
 // Selectx executes select query with squirrel.Sqlizer
@@ -59,7 +68,10 @@ type Querier interface {
 
 // Get executes get query
 func Get(ctx context.Context, db Querier, dst interface{}, query string, args ...interface{}) error {
-	return pgxscan.Get(ctx, db, dst, query, args...)
+	dbCtx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	return pgxscan.Get(dbCtx, db, dst, query, args...)
 }
 
 // Getx executes get query with squirrel.Sqlizer
@@ -77,6 +89,14 @@ type Executor interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 }
 
+// Exec executes query
+func Exec(ctx context.Context, db Executor, query string, args ...interface{}) (pgconn.CommandTag, error) {
+	dbCtx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	return db.Exec(dbCtx, query, args...)
+}
+
 // Execx executes query with squirrel.Sqlizer
 func Execx(ctx context.Context, db Executor, sqlizer sq.Sqlizer) (pgconn.CommandTag, error) {
 	stmt, args, err := sqlizer.ToSql()
@@ -84,5 +104,5 @@ func Execx(ctx context.Context, db Executor, sqlizer sq.Sqlizer) (pgconn.Command
 		return pgconn.CommandTag{}, err
 	}
 
-	return db.Exec(ctx, stmt, args...)
+	return Exec(ctx, db, stmt, args...)
 }

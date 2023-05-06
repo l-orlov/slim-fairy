@@ -23,7 +23,7 @@ func (s *Storage) createUser(ctx context.Context, db Querier, record *model.User
 	query := psql().
 		Insert(record.DbTable()).
 		SetMap(userAttrs(record)).
-		Suffix("RETURNING id, created_at, updated_at")
+		Suffix("RETURNING " + asteriskUsers)
 
 	err := Getx(ctx, db, record, query)
 	if err != nil {
@@ -38,7 +38,7 @@ func (s *Storage) UpdateUser(ctx context.Context, record *model.User) error {
 		Update(record.DbTable()).
 		Where(sq.Eq{"id": record.ID}).
 		SetMap(userAttrs(record)).
-		Suffix("RETURNING updated_at")
+		Suffix("RETURNING " + asteriskUsers)
 
 	err := Getx(ctx, s.pool, record, query)
 	if err != nil {
@@ -47,7 +47,7 @@ func (s *Storage) UpdateUser(ctx context.Context, record *model.User) error {
 	return nil
 }
 
-// GetUserByID get model.User by id
+// GetUserByID gets model.User by id
 func (s *Storage) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	record := &model.User{}
 	query := psql().
@@ -64,7 +64,7 @@ func (s *Storage) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, e
 	return record, nil
 }
 
-// GetUserByEmail get model.User by email
+// GetUserByEmail gets model.User by email
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	record := &model.User{}
 	query := psql().
@@ -91,5 +91,6 @@ func userAttrs(record *model.User) map[string]interface{} {
 		"weight":      record.Weight,
 		"height":      record.Height,
 		"gender":      record.Gender,
+		"created_by":  record.CreatedBy,
 	}
 }

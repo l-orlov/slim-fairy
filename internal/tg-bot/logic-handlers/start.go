@@ -8,19 +8,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	// TODO: fix
-	startMsgTemplate = `
+// startMsgTemplate contains start info for chatbot
+const startMsgTemplate = `
 Привет! Я @%s. Помогу тебе составить план питания.
 Ниже список доступных команд.
 
-Начальная информация:
-/start
-Регистрация:
-/register
-Получение диеты от ИИ:
-/getdietfromai`
-)
+/start - Начать диалог
+/register - Пройти регистрацию
+/cancelreg - Прервать регистрацию
+/getdietfromai - Получить диету от ИИ`
 
 // Start introduces the bot.
 func (h *LogicHandlers) Start(b *gotgbot.Bot, ctx *ext.Context) error {

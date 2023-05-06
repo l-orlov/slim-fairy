@@ -18,7 +18,7 @@ func (s *Storage) createAuthData(ctx context.Context, db Querier, record *model.
 	query := psql().
 		Insert(record.DbTable()).
 		SetMap(authDataAttrs(record)).
-		Suffix("RETURNING created_at, updated_at")
+		Suffix("RETURNING " + asteriskAuthData)
 
 	err := Getx(ctx, db, record, query)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *Storage) UpdateAuthDataPassword(ctx context.Context, record *model.Auth
 			"source_type": record.SourceType,
 		}).
 		Set("password", record.Password).
-		Suffix("RETURNING updated_at")
+		Suffix("RETURNING " + asteriskAuthData)
 
 	err := Getx(ctx, s.pool, record, query)
 	if err != nil {
@@ -45,7 +45,7 @@ func (s *Storage) UpdateAuthDataPassword(ctx context.Context, record *model.Auth
 	return nil
 }
 
-// GetAuthDataBySourceIDAndType get model.AuthData by source_id, source_type
+// GetAuthDataBySourceIDAndType gets model.AuthData by source_id, source_type
 func (s *Storage) GetAuthDataBySourceIDAndType(
 	ctx context.Context,
 	sourceID uuid.UUID,

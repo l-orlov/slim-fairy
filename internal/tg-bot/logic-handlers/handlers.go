@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/l-orlov/slim-fairy/internal/model"
+	"github.com/l-orlov/slim-fairy/internal/store"
 )
 
 type (
@@ -13,11 +14,16 @@ type (
 
 	LogicHandlers struct {
 		menuGetter DietGetter
+		storage    *store.Storage
 	}
 )
 
-func New(menuGetter DietGetter) *LogicHandlers {
+func New(
+	menuGetter DietGetter,
+	storage *store.Storage,
+) *LogicHandlers {
 	return &LogicHandlers{
 		menuGetter: menuGetter,
+		storage:    storage,
 	}
 }

@@ -31,7 +31,7 @@ CREATE FUNCTION public.set_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    NEW.updated_at = now() at time zone 'utc';
+    NEW.updated_at = now() AT TIME ZONE 'utc';
     RETURN NEW;
 END;
 $$;
@@ -47,6 +47,21 @@ CREATE TABLE public.auth_data (
     source_id uuid NOT NULL,
     source_type text NOT NULL,
     password text NOT NULL,
+    created_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    updated_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+);
+
+
+--
+-- Name: chat_bot_dialogs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.chat_bot_dialogs (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_telegram_id bigint NOT NULL,
+    kind text NOT NULL,
+    status integer NOT NULL,
+    data jsonb,
     created_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
     updated_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
 );
@@ -93,10 +108,11 @@ CREATE TABLE public.nutritionists (
     name text DEFAULT ''::text NOT NULL,
     email text,
     phone text,
-    telegram_id text,
+    telegram_id bigint,
     age integer,
     gender integer,
     info text,
+    created_by text,
     created_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
     updated_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
 );
@@ -111,11 +127,13 @@ CREATE TABLE public.users (
     name text DEFAULT ''::text NOT NULL,
     email text,
     phone text,
-    telegram_id text,
+    telegram_id bigint,
     age integer,
     weight integer,
     height integer,
     gender integer,
+    physical_activity_level integer,
+    created_by text,
     created_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
     updated_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
 );
@@ -126,6 +144,14 @@ CREATE TABLE public.users (
 --
 
 ALTER TABLE ONLY public.goose_db_version ALTER COLUMN id SET DEFAULT nextval('public.goose_db_version_id_seq'::regclass);
+
+
+--
+-- Name: chat_bot_dialogs chat_bot_dialogs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.chat_bot_dialogs
+    ADD CONSTRAINT chat_bot_dialogs_pkey PRIMARY KEY (id);
 
 
 --
@@ -157,6 +183,13 @@ ALTER TABLE ONLY public.users
 --
 
 CREATE UNIQUE INDEX auth_data_source_id_source_type_idx ON public.auth_data USING btree (source_id, source_type);
+
+
+--
+-- Name: chat_bot_dialogs_user_telegram_id_kind_status_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX chat_bot_dialogs_user_telegram_id_kind_status_idx ON public.chat_bot_dialogs USING btree (user_telegram_id, kind, status);
 
 
 --
@@ -199,6 +232,13 @@ CREATE UNIQUE INDEX users_phone_idx ON public.users USING btree (phone);
 --
 
 CREATE UNIQUE INDEX users_telegram_id_idx ON public.users USING btree (telegram_id);
+
+
+--
+-- Name: chat_bot_dialogs chat_bot_dialogs_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER chat_bot_dialogs_updated_at BEFORE UPDATE ON public.chat_bot_dialogs FOR EACH ROW EXECUTE FUNCTION public.set_updated_at_column();
 
 
 --

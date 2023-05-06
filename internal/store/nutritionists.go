@@ -13,7 +13,7 @@ func (s *Storage) CreateNutritionist(ctx context.Context, record *model.Nutritio
 	query := psql().
 		Insert(record.DbTable()).
 		SetMap(nutritionistAttrs(record)).
-		Suffix("RETURNING id, created_at, updated_at")
+		Suffix("RETURNING " + asteriskNutritionists)
 
 	err := Getx(ctx, s.pool, record, query)
 	if err != nil {
@@ -28,7 +28,7 @@ func (s *Storage) UpdateNutritionist(ctx context.Context, record *model.Nutritio
 		Update(record.DbTable()).
 		Where(sq.Eq{"id": record.ID}).
 		SetMap(nutritionistAttrs(record)).
-		Suffix("RETURNING updated_at")
+		Suffix("RETURNING " + asteriskNutritionists)
 
 	err := Getx(ctx, s.pool, record, query)
 	if err != nil {
@@ -37,13 +37,13 @@ func (s *Storage) UpdateNutritionist(ctx context.Context, record *model.Nutritio
 	return nil
 }
 
-// GetNutritionistByID get model.Nutritionist by id
+// GetNutritionistByID gets model.Nutritionist by id
 func (s *Storage) GetNutritionistByID(ctx context.Context, id uuid.UUID) (*model.Nutritionist, error) {
 	record := &model.Nutritionist{}
 	query := psql().
 		Select(asteriskNutritionists).
 		From(record.DbTable()).
-		Where(sq.Eq{"id": record.ID}).
+		Where(sq.Eq{"id": id}).
 		Limit(1)
 
 	err := Getx(ctx, s.pool, record, query)
@@ -63,5 +63,6 @@ func nutritionistAttrs(record *model.Nutritionist) map[string]interface{} {
 		"age":         record.Age,
 		"gender":      record.Gender,
 		"info":        record.Info,
+		"created_by":  record.CreatedBy,
 	}
 }

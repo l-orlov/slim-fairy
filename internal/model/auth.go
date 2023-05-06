@@ -12,8 +12,9 @@ type AuthData struct {
 	SourceID   uuid.UUID          `db:"source_id"`
 	SourceType AuthDataSourceType `db:"source_type"`
 	Password   string             `db:"password"`
-	CreatedAt  time.Time          `db:"created_at"`
-	UpdatedAt  time.Time          `db:"updated_at"`
+
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }
 
 // DbTable returns DB table name

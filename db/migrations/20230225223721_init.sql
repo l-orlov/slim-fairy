@@ -5,25 +5,26 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE OR REPLACE FUNCTION set_updated_at_column() RETURNS TRIGGER AS
 $$
 BEGIN
-    NEW.updated_at = now() at time zone 'utc';
+    NEW.updated_at = now() AT TIME ZONE 'utc';
     RETURN NEW;
 END;
 $$ language 'plpgsql';
 
 CREATE TABLE users
 (
-    id                      uuid PRIMARY KEY     DEFAULT gen_random_uuid(),
-    name                    text        NOT NULL DEFAULT '',
-    email                   text,
-    phone                   text,
-    telegram_id             text,
-    age                     int,
-    weight                  int,
-    height                  int,
-    gender                  int,
-    physical_activity_level int,
-    created_at              TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc'),
-    updated_at              TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc')
+    id                      UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+    name                    TEXT        NOT NULL DEFAULT '',
+    email                   TEXT,
+    phone                   TEXT,
+    telegram_id             BIGINT,
+    age                     INT,
+    weight                  INT,
+    height                  INT,
+    gender                  INT,
+    physical_activity_level INT,
+    created_by              TEXT,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
 );
 
 COMMENT ON TABLE users IS 'Users';
@@ -37,6 +38,7 @@ COMMENT ON COLUMN users.weight IS 'Weight';
 COMMENT ON COLUMN users.height IS 'Height';
 COMMENT ON COLUMN users.gender IS 'Gender';
 COMMENT ON COLUMN users.physical_activity_level IS 'Physical activity level';
+COMMENT ON COLUMN users.created_by IS 'Created by';
 COMMENT ON COLUMN users.created_at IS 'Create date';
 COMMENT ON COLUMN users.updated_at IS 'Update date';
 
@@ -52,16 +54,17 @@ CREATE UNIQUE INDEX ON users USING btree (telegram_id);
 
 CREATE TABLE nutritionists
 (
-    id          uuid PRIMARY KEY     DEFAULT gen_random_uuid(),
-    name        text        NOT NULL DEFAULT '',
-    email       text,
-    phone       text,
-    telegram_id text,
-    age         int,
-    gender      int,
-    info        text,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc'),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc')
+    id          UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+    name        TEXT        NOT NULL DEFAULT '',
+    email       TEXT,
+    phone       TEXT,
+    telegram_id BIGINT,
+    age         INT,
+    gender      INT,
+    info        TEXT,
+    created_by  TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
 );
 
 COMMENT ON TABLE nutritionists IS 'Nutritionists';
@@ -73,6 +76,7 @@ COMMENT ON COLUMN users.telegram_id IS 'Telegram ID';
 COMMENT ON COLUMN nutritionists.age IS 'Age';
 COMMENT ON COLUMN nutritionists.gender IS 'Gender';
 COMMENT ON COLUMN nutritionists.info IS 'Info';
+COMMENT ON COLUMN users.created_by IS 'Created by';
 COMMENT ON COLUMN nutritionists.created_at IS 'Create date';
 COMMENT ON COLUMN nutritionists.updated_at IS 'Update date';
 
@@ -88,11 +92,11 @@ CREATE UNIQUE INDEX ON nutritionists USING btree (telegram_id);
 
 CREATE TABLE auth_data
 (
-    source_id   uuid        NOT NULL,
-    source_type text        NOT NULL,
-    password    text        NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc'),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT (now() at time zone 'utc')
+    source_id   UUID        NOT NULL,
+    source_type TEXT        NOT NULL,
+    password    TEXT        NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
 );
 
 COMMENT ON TABLE auth_data IS 'Authentication data';
@@ -109,6 +113,34 @@ CREATE TRIGGER update_auth_data_updated_at
 EXECUTE PROCEDURE set_updated_at_column();
 
 CREATE UNIQUE INDEX ON auth_data USING btree (source_id, source_type);
+
+CREATE TABLE chat_bot_dialogs
+(
+    id               UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+    user_telegram_id BIGINT      NOT NULL,
+    kind             TEXT        NOT NULL,
+    status           INT         NOT NULL,
+    data             JSONB,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
+);
+
+COMMENT ON TABLE chat_bot_dialogs IS 'Chat-bot dialogs with users';
+COMMENT ON COLUMN chat_bot_dialogs.id IS 'ID';
+COMMENT ON COLUMN chat_bot_dialogs.user_telegram_id IS 'User Telegram ID';
+COMMENT ON COLUMN chat_bot_dialogs.kind IS 'Kind';
+COMMENT ON COLUMN chat_bot_dialogs.status IS 'Status';
+COMMENT ON COLUMN chat_bot_dialogs.data IS 'Dialog data';
+COMMENT ON COLUMN nutritionists.created_at IS 'Create date';
+COMMENT ON COLUMN nutritionists.updated_at IS 'Update date';
+
+CREATE TRIGGER chat_bot_dialogs_updated_at
+    BEFORE UPDATE
+    ON chat_bot_dialogs
+    FOR EACH ROW
+EXECUTE PROCEDURE set_updated_at_column();
+
+CREATE INDEX ON chat_bot_dialogs USING btree (user_telegram_id, kind, status);
 -- +goose StatementEnd
 
 -- +goose Down

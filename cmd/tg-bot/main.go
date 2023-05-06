@@ -6,6 +6,7 @@ import (
 
 	"github.com/l-orlov/slim-fairy/internal/ai-api-client"
 	"github.com/l-orlov/slim-fairy/internal/config"
+	"github.com/l-orlov/slim-fairy/internal/store"
 	"github.com/l-orlov/slim-fairy/internal/tg-bot"
 )
 
@@ -20,11 +21,18 @@ func main() {
 
 	cfg := config.Get()
 
+	// Connect to DB
+	storage, err := store.New(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer storage.Close()
+
 	// Create AI API user
 	aiAPIUser := ai_api_client.New()
 
 	// Create bot
-	bot, err := tg_bot.New(cfg.Token, aiAPIUser)
+	bot, err := tg_bot.New(cfg.Token, aiAPIUser, storage)
 	if err != nil {
 		log.Fatalf("tg_bot.New: %v", err)
 	}

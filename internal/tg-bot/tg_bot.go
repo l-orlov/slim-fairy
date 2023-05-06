@@ -10,14 +10,14 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/conversation"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/message"
+	"github.com/l-orlov/slim-fairy/internal/store"
 	lhandlers "github.com/l-orlov/slim-fairy/internal/tg-bot/logic-handlers"
 	"github.com/pkg/errors"
 )
 
 /* TODO:
-1. отдавать в сообщениях файлы с меню
-2. добавить цепочку диалога и регистрации
-3. добавить поход в чат гпт
+- добавить цепочку диалога и регистрации
+- добавить поход в чат гпт
 */
 
 type (
@@ -27,7 +27,11 @@ type (
 	}
 )
 
-func New(token string, menuGetter lhandlers.DietGetter) (*Bot, error) {
+func New(
+	token string,
+	menuGetter lhandlers.DietGetter,
+	storage *store.Storage,
+) (*Bot, error) {
 	b, err := gotgbot.NewBot(token, &gotgbot.BotOpts{
 		Client: http.Client{},
 		DefaultRequestOpts: &gotgbot.RequestOpts{
@@ -40,7 +44,7 @@ func New(token string, menuGetter lhandlers.DietGetter) (*Bot, error) {
 	}
 
 	// Create logic handlers
-	logicHandlers := lhandlers.New(menuGetter)
+	logicHandlers := lhandlers.New(menuGetter, storage)
 
 	// Create updater and dispatcher.
 	updater := ext.NewUpdater(&ext.UpdaterOpts{

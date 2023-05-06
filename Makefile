@@ -6,8 +6,14 @@ LOCAL_DB_PORT:=54320
 LOCAL_DB_DSN:=host=$(LOCAL_DB_HOST) port=$(LOCAL_DB_PORT) dbname=$(LOCAL_DB_NAME) user=$(LOCAL_DB_USER) password=$(LOCAL_DB_PASSWORD) sslmode=disable
 
 # set up locally with docker
-docker-up-local:
+docker-up-local-with-build:
 	docker-compose --env-file ./configs/docker_local.env up -d --build
+	# sleep before run migrations to wait db creation
+	sleep 1
+	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up
+
+docker-up-local:
+	docker-compose --env-file ./configs/docker_local.env up -d
 	# sleep before run migrations to wait db creation
 	sleep 1
 	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up

@@ -48,6 +48,12 @@ func (User) DbTable() string {
 	return "users"
 }
 
+// IsFilledForGetDiet returns true if data is filled for diet
+func (u User) IsFilledForGetDiet() bool {
+	return u.Age != nil && u.Weight != nil &&
+		u.Height != nil && u.Gender != nil && u.PhysicalActivity != nil
+}
+
 // Gender is type for person gender
 //
 //go:generate stringer -type=Gender

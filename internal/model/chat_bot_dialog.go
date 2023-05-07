@@ -73,22 +73,22 @@ type ChatBotDialogDataUserRegistration struct {
 }
 
 // ToJSON marshals data to JSON string
-func (field *ChatBotDialogDataUserRegistration) ToJSON() string {
-	data, err := json.Marshal(field)
+func (data *ChatBotDialogDataUserRegistration) ToJSON() string {
+	jsonBytes, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("ChatBotDialogDataUserRegistration.ToJSON: %v", err)
 	}
 
-	return string(data)
+	return string(jsonBytes)
 }
 
 // FromJSON unmarshals data form JSON string
-func (field *ChatBotDialogDataUserRegistration) FromJSON(s string) error {
-	return json.Unmarshal([]byte(s), field)
+func (data *ChatBotDialogDataUserRegistration) FromJSON(s string) error {
+	return json.Unmarshal([]byte(s), data)
 }
 
 // IsFilled returns true if all fields are filled
-func (field *ChatBotDialogDataUserRegistration) IsFilled() bool {
-	return field.Name != nil && field.Age != nil && field.Weight != nil &&
-		field.Height != nil && field.Gender != nil && field.PhysicalActivity != nil
+func (data *ChatBotDialogDataUserRegistration) IsFilled() bool {
+	return data.Name != nil && data.Age != nil && data.Weight != nil &&
+		data.Height != nil && data.Gender != nil && data.PhysicalActivity != nil
 }

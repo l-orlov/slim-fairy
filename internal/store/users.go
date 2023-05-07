@@ -64,6 +64,23 @@ func (s *Storage) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, e
 	return record, nil
 }
 
+// GetUserByTelegramID gets model.User by telegram_id
+func (s *Storage) GetUserByTelegramID(ctx context.Context, telegramID int64) (*model.User, error) {
+	record := &model.User{}
+	query := psql().
+		Select(asteriskUsers).
+		From(record.DbTable()).
+		Where(sq.Eq{"telegram_id": telegramID}).
+		Limit(1)
+
+	err := Getx(ctx, s.pool, record, query)
+	if err != nil {
+		return nil, dbError(err)
+	}
+
+	return record, nil
+}
+
 // GetUserByEmail gets model.User by email
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	record := &model.User{}
@@ -83,14 +100,15 @@ func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*model.User
 
 func userAttrs(record *model.User) map[string]interface{} {
 	return map[string]interface{}{
-		"name":        record.Name,
-		"email":       record.Email,
-		"phone":       record.Phone,
-		"telegram_id": record.TelegramID,
-		"age":         record.Age,
-		"weight":      record.Weight,
-		"height":      record.Height,
-		"gender":      record.Gender,
-		"created_by":  record.CreatedBy,
+		"name":                    record.Name,
+		"email":                   record.Email,
+		"phone":                   record.Phone,
+		"telegram_id":             record.TelegramID,
+		"age":                     record.Age,
+		"weight":                  record.Weight,
+		"height":                  record.Height,
+		"gender":                  record.Gender,
+		"physical_activity_level": record.PhysicalActivity,
+		"created_by":              record.CreatedBy,
 	}
 }

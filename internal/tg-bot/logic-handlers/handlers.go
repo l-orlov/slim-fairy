@@ -9,21 +9,21 @@ import (
 
 type (
 	DietGetter interface {
-		GetDietByParams(ctx context.Context, params model.GetDietParams) (string, error)
+		GetDietByParams(ctx context.Context, params *model.GetDietParams) (string, error)
 	}
 
 	LogicHandlers struct {
-		menuGetter DietGetter
+		dietGetter DietGetter
 		storage    *store.Storage
 	}
 )
 
 func New(
-	menuGetter DietGetter,
+	dietGetter DietGetter,
 	storage *store.Storage,
 ) *LogicHandlers {
 	return &LogicHandlers{
-		menuGetter: menuGetter,
+		dietGetter: dietGetter,
 		storage:    storage,
 	}
 }

@@ -5,12 +5,11 @@ import (
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
-	"github.com/pkg/errors"
 )
 
 // startMsgTemplate contains start info for chatbot
 const startMsgTemplate = `
-Привет! Я @%s. Помогу тебе составить план питания.
+Привет! Я @%s. Помогу вам составить план питания.
 Ниже список доступных команд.
 
 /start - Начать диалог
@@ -20,12 +19,8 @@ const startMsgTemplate = `
 
 // Start introduces the bot.
 func (h *LogicHandlers) Start(b *gotgbot.Bot, ctx *ext.Context) error {
-	_, err := ctx.EffectiveMessage.Reply(b, fmt.Sprintf(startMsgTemplate, b.User.Username), &gotgbot.SendMessageOpts{
-		ParseMode: "html",
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to send start message")
-	}
+	replyMsg := fmt.Sprintf(startMsgTemplate, b.User.Username)
+	reply(b, ctx, replyMsg)
 
 	return nil
 }

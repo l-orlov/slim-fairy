@@ -17,8 +17,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TODO: Escape string всюду. Как обезопаситься от sql injections?
-// кнопки сделать, где это нужно
+// TODO:
+// Escape string всюду. Как обезопаситься от sql injections?
+// кнопки сделать, где это нужно.
+// метод для обновления пользовательских данных.
 
 // User registration handler states
 const (
@@ -35,22 +37,50 @@ const (
 const userRegistrationStartInfo = `
 Чтобы точнее составить диету, нужны параметры (рост, вес и другие).
 Я буду спрашивать по очереди каждый параметр.
-Отвечай мне в следующем сообщении.
+Отвечайте мне в следующем сообщении.
 
-Если решишь прервать регистрацию, то используй команду:
+Если решите прервать регистрацию, то используйте команду:
 /cancelreg
 
-Начнем. Как тебя зовут?`
+Начнем. Как вас зовут?`
 
 // StartUserRegistration starts user registration
-func (h *LogicHandlers) StartUserRegistration(b *gotgbot.Bot, ctx *ext.Context) error {
-	_, err := ctx.EffectiveMessage.Reply(b, userRegistrationStartInfo, &gotgbot.SendMessageOpts{
-		ParseMode: "html",
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to send start message")
+func (h *LogicHandlers) StartUserRegistration(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
+	var (
+		replyMsg            string
+		needEndConversation bool
+	)
+	defer func() {
+		// End if needed
+		if needEndConversation {
+			nextState = endConversation(b, ctx, replyMsg)
+			return
+		}
+
+		// Reply to user
+		nextState = replyInConversation(b, ctx, replyMsg, RegisterName)
+	}()
+
+	// Check if user exists
+	user, err := h.storage.GetUserByTelegramID(context.Background(), ctx.EffectiveSender.Id())
+	if err == nil {
+		// TODO: подсказка о том, как обновить данные, если это нужно
+		replyMsg = fmt.Sprintf("%s, вы уже прошли регистрацию", user.Name)
+		needEndConversation = true
+		return nil
 	}
-	return handlers.NextConversationState(RegisterName)
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
+		log.Printf("h.storage.GetUserByTelegramID: %v", err)
+
+		// Error -> try again
+		replyMsg = "Что-то пошло не так. Попробуйте еще раз"
+		return nil
+	}
+
+	// Success -> go to next state
+	replyMsg = userRegistrationStartInfo
+
+	return nil
 }
 
 // CancelUserRegistration cancels user registration
@@ -75,7 +105,7 @@ func (h *LogicHandlers) RegisterUserName(b *gotgbot.Bot, ctx *ext.Context) (next
 	const validLen = 100
 	if len(input) > validLen {
 		// Not valid -> try again
-		replyMsg = fmt.Sprintf("Слишком длинное имя. Сократи до %d символов", validLen)
+		replyMsg = fmt.Sprintf("Слишком длинное имя. Сократите до %d символов", validLen)
 		return nil
 	}
 
@@ -96,12 +126,12 @@ func (h *LogicHandlers) RegisterUserName(b *gotgbot.Bot, ctx *ext.Context) (next
 		log.Printf("h.storage.CreateChatBotDialog: %v", err)
 
 		// Error -> try again
-		replyMsg = "Что-то пошло не так. Введи имя еще раз"
+		replyMsg = "Что-то пошло не так. Введите имя еще раз"
 		return nil
 	}
 
 	// Success -> go to next state
-	replyMsg = fmt.Sprintf("Рад знакомству, %s!\nСколько тебе лет?", name)
+	replyMsg = fmt.Sprintf("Рад знакомству, %s!\nСколько вам лет?", name)
 	success = true
 
 	return nil
@@ -123,17 +153,17 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 	ageNumber, err := strconv.Atoi(input)
 	if err != nil {
 		// Not valid -> try again
-		replyMsg = "Нужно число. Попробуй еще раз"
+		replyMsg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
 	if ageNumber < 0 || ageNumber > 150 {
 		// Not valid -> try again
-		replyMsg = "Число не подходит для возраста. Попробуй еще раз"
+		replyMsg = "Число не подходит для возраста. Попробуйте еще раз"
 		return nil
 	}
 
 	// Update dialog data
-	const errMsg = "Что-то пошло не так. Введи возраст еще раз"
+	const errMsg = "Что-то пошло не так. Введите возраст еще раз"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -171,7 +201,7 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 	}
 
 	// Success -> go to next state
-	replyMsg = "Прекрасный возраст.\nСколько ты весишь кг?"
+	replyMsg = "Прекрасный возраст.\nКакой у вас вес кг?"
 	success = true
 
 	return nil
@@ -193,17 +223,17 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	weight, err := strconv.Atoi(input)
 	if err != nil {
 		// Not valid -> try again
-		replyMsg = "Нужно число. Попробуй еще раз"
+		replyMsg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
 	if weight < 0 || weight > 300 {
 		// Not valid -> try again
-		replyMsg = "Число не подходит для веса. Попробуй еще раз"
+		replyMsg = "Число не подходит для веса. Попробуйте еще раз"
 		return nil
 	}
 
 	// Update dialog data
-	const errMsg = "Что-то пошло не так. Введи вес еще раз"
+	const errMsg = "Что-то пошло не так. Введите вес еще раз"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -241,7 +271,7 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	}
 
 	// Success -> go to next state
-	replyMsg = "Хорошо.\nКакой у тебя рост см?"
+	replyMsg = "Хорошо.\nКакой у вас рост см?"
 	success = true
 
 	return nil
@@ -263,17 +293,17 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	height, err := strconv.Atoi(input)
 	if err != nil {
 		// Not valid -> try again
-		replyMsg = "Нужно число. Попробуй еще раз"
+		replyMsg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
 	if height < 0 || height > 250 {
 		// Not valid -> try again
-		replyMsg = "Число не подходит для роста. Попробуй еще раз"
+		replyMsg = "Число не подходит для роста. Попробуйте еще раз"
 		return nil
 	}
 
 	// Update dialog data
-	const errMsg = "Что-то пошло не так. Введи рост еще раз"
+	const errMsg = "Что-то пошло не так. Введите рост еще раз"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -311,7 +341,7 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	}
 
 	// Success -> go to next state
-	replyMsg = "ОК.\nКакого ты пола?\nНапиши: м (мужчина) или ж (женщина)"
+	replyMsg = "ОК.\nКакой у вас пол?\nНапишите: м (мужчина) или ж (женщина)"
 	success = true
 
 	return nil
@@ -333,12 +363,12 @@ func (h *LogicHandlers) RegisterUserGender(b *gotgbot.Bot, ctx *ext.Context) (ne
 
 	if input != "м" && input != "ж" {
 		// Not valid -> try again
-		replyMsg = "Попробуй еще раз. Напиши: м или ж"
+		replyMsg = "Попробуйте еще раз. Напишите: м или ж"
 		return nil
 	}
 
 	// Update dialog data
-	const errMsg = "Что-то пошло не так. Введи пол еще раз"
+	const errMsg = "Что-то пошло не так. Введите пол еще раз"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -381,8 +411,8 @@ func (h *LogicHandlers) RegisterUserGender(b *gotgbot.Bot, ctx *ext.Context) (ne
 	// Success -> go to next state
 	replyMsg = `
 Принято.
-Теперь какой у тебя уровень физической активности?
-Напиши: н (низкий) или с (средний) или в (высокий)`
+Теперь какой у вас уровень физической активности?
+Напишите: н (низкий) или с (средний) или в (высокий)`
 	success = true
 
 	return nil
@@ -411,12 +441,12 @@ func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Co
 
 	if input != "н" && input != "с" && input != "в" {
 		// Not valid -> try again
-		replyMsg = "Попробуй еще раз. Напиши: н или с или в"
+		replyMsg = "Попробуйте еще раз. Напишите: н или с или в"
 		return nil
 	}
 
 	// Update dialog data
-	const errMsg = "Что-то пошло не так. Введи пол еще раз"
+	const errMsg = "Что-то пошло не так. Введите пол еще раз"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -464,7 +494,7 @@ func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Co
 
 		// Error -> try again
 		replyMsg = `
-Не все данные заполнены. Попробуй пройти регистрацию снова:
+Не все данные заполнены. Попробуйте пройти регистрацию снова:
 /register`
 		needEndConversation = true
 		return nil
@@ -481,8 +511,8 @@ func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Co
 Пол: %s
 Уровень физической активности: %s
 
-Подтверди, что данные верны.
-Напиши: да (верны) или нет (не верны)`,
+Подтвердите, что данные верны.
+Напишите: да (верны) или нет (не верны)`,
 		*dialogData.Name, *dialogData.Age, *dialogData.Weight, *dialogData.Height,
 		dialogData.Gender.DescriptionRu(), dialogData.PhysicalActivity.DescriptionRu())
 	success = true
@@ -512,21 +542,21 @@ func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context
 
 	if input != "да" && input != "нет" {
 		// Not valid -> try again
-		replyMsg = "Попробуй еще раз. Напиши: да или нет"
+		replyMsg = "Попробуйте еще раз. Напишите: да или нет"
 		return nil
 	}
 
 	if input == "нет" {
 		replyMsg = `
 ОК. Похоже какие-то данные неверны.
-Попробуй пройти регистрацию снова:
+Попробуйте пройти регистрацию снова:
 /register`
 		needEndConversation = true
 		return nil
 	}
 
 	// Use dialog data for creating user
-	const errMsg = "Что-то пошло не так. Напиши еще раз: да или нет"
+	const errMsg = "Что-то пошло не так. Напишите еще раз: да или нет"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -575,8 +605,8 @@ func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context
 	}
 
 	replyMsg = `
-Ты успешно прошел регистрацию!
-Уже учел твои параметры для составления диеты.`
+Вы успешно прошли регистрацию!
+Уже учел ваши параметры для составления диеты.`
 	needEndConversation = true
 	return nil
 }

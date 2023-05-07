@@ -2,6 +2,12 @@ package model
 
 type (
 	GetDietParams struct {
-		// TODO: some params
+		Age              int
+		Weight           int
+		Height           int
+		Gender           Gender
+		PhysicalActivity PhysicalActivityLevel
+		MealTimes        int
+		SnackTimes       int
 	}
 )

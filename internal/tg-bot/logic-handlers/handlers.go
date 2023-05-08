@@ -3,27 +3,26 @@ package logic_handlers
 import (
 	"context"
 
-	"github.com/l-orlov/slim-fairy/internal/model"
 	"github.com/l-orlov/slim-fairy/internal/store"
 )
 
 type (
-	DietGetter interface {
-		GetDietByParams(ctx context.Context, params *model.GetDietParams) (string, error)
+	AIClient interface {
+		SendRequest(ctx context.Context, prompt string) (resp string, err error)
 	}
 
 	LogicHandlers struct {
-		dietGetter DietGetter
-		storage    *store.Storage
+		aiClient AIClient
+		storage  *store.Storage
 	}
 )
 
 func New(
-	dietGetter DietGetter,
+	aiClient AIClient,
 	storage *store.Storage,
 ) *LogicHandlers {
 	return &LogicHandlers{
-		dietGetter: dietGetter,
-		storage:    storage,
+		aiClient: aiClient,
+		storage:  storage,
 	}
 }

@@ -28,11 +28,11 @@ func main() {
 	}
 	defer storage.Close()
 
-	// Create AI API user
-	aiAPIUser := ai_api_client.New(cfg.APIKey)
+	// Create AI API client
+	aiClient := ai_api_client.New(cfg.APIKey)
 
 	// Create bot
-	bot, err := tg_bot.New(cfg.Token, aiAPIUser, storage)
+	bot, err := tg_bot.New(cfg.Token, aiClient, storage)
 	if err != nil {
 		log.Fatalf("tg_bot.New: %v", err)
 	}

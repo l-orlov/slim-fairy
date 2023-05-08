@@ -2,12 +2,10 @@ package ai_api_client
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/PullRequestInc/go-gpt3"
-	"github.com/l-orlov/slim-fairy/internal/model"
 	"github.com/pkg/errors"
 )
 
@@ -17,29 +15,6 @@ const (
 	roleUser    = "user"
 	maxTokens   = 3000
 	temperature = 0.7
-)
-
-// todo: test
-/*
-Типа сделай меню для интервального голодания на 2 приема пищи без перекусов
-*/
-
-// ChatGPT prompts templates
-const (
-	// TODO: не работает, если 1 прием пищи и 1 перекус. Или если 2 прима пищи.
-	// можно пофиксить через enum и захардкоженные подписи.
-	promptTemplateGetDiet = `
-Составь диету на неделю.
-Приемов пищи: %d.
-Перекусов: %d.
-Без диетических ограничений.
-Укажи список ингредиентов в конце.
-
-Возраст: %d.
-Рост: %d см.
-Вес: %d кг.
-Пол: %s.
-Уровень физической активности: %s`
 )
 
 type (
@@ -56,10 +31,9 @@ func New(apiKey string) *Client {
 	}
 }
 
-func (c *Client) GetDietByParams(ctx context.Context, params *model.GetDietParams) (string, error) {
-	// Send request to ChatGPT API
-	msg := buildPromptForGetDiet(params)
-	output, err := c.sendRequest(ctx, msg)
+// SendRequest sends request to ChatGPT API and returns response
+func (c *Client) SendRequest(ctx context.Context, prompt string) (string, error) {
+	output, err := c.sendRequest(ctx, prompt)
 	if err != nil {
 		return "", errors.Wrap(err, "c.sendRequest")
 	}
@@ -67,13 +41,13 @@ func (c *Client) GetDietByParams(ctx context.Context, params *model.GetDietParam
 	return output, nil
 }
 
-func (c *Client) sendRequest(ctx context.Context, msg string) (resp string, err error) {
+func (c *Client) sendRequest(ctx context.Context, prompt string) (resp string, err error) {
 	outputBuilder := strings.Builder{}
 	req := gpt3.ChatCompletionRequest{
 		Messages: []gpt3.ChatCompletionRequestMessage{
 			{
 				Role:    roleUser,
-				Content: msg,
+				Content: prompt,
 			},
 		},
 		MaxTokens:   maxTokens,
@@ -87,17 +61,4 @@ func (c *Client) sendRequest(ctx context.Context, msg string) (resp string, err 
 	}
 
 	return outputBuilder.String(), nil
-}
-
-func buildPromptForGetDiet(params *model.GetDietParams) string {
-	return fmt.Sprintf(
-		promptTemplateGetDiet,
-		params.MealTimes,
-		params.SnackTimes,
-		params.Age,
-		params.Height,
-		params.Weight,
-		params.Gender.DescriptionRu(),
-		params.PhysicalActivity.DescriptionRu(),
-	)
 }

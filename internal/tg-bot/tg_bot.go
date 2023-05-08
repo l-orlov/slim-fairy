@@ -16,8 +16,7 @@ import (
 )
 
 /* TODO:
-- добавить цепочку диалога и регистрации
-- добавить поход в чат гпт
+- добавить цепочку обновления данных
 */
 
 type (
@@ -29,7 +28,7 @@ type (
 
 func New(
 	token string,
-	menuGetter lhandlers.DietGetter,
+	aiClient lhandlers.AIClient,
 	storage *store.Storage,
 ) (*Bot, error) {
 	b, err := gotgbot.NewBot(token, &gotgbot.BotOpts{
@@ -44,7 +43,7 @@ func New(
 	}
 
 	// Create logic handlers
-	logicHandlers := lhandlers.New(menuGetter, storage)
+	logicHandlers := lhandlers.New(aiClient, storage)
 
 	// Create updater and dispatcher.
 	updater := ext.NewUpdater(&ext.UpdaterOpts{

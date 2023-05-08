@@ -606,7 +606,9 @@ func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context
 
 	replyMsg = `
 Вы успешно прошли регистрацию!
-Уже учел ваши параметры для составления диеты.`
+Уже учел ваши параметры для составления диеты.
+Получить диету от ИИ:
+/getdietfromai`
 	needEndConversation = true
 	return nil
 }

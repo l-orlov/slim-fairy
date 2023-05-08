@@ -52,3 +52,6 @@ gen:
 
 run:
 	go run cmd/slim-fairy/main.go
+
+run-bot:
+	go run cmd/tg-bot/main.go

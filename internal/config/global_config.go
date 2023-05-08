@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// TODO: use private config without write access
+
 type (
 	Config struct {
 		PgDSN         string `mapstructure:"PG_DSN"`

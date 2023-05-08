@@ -141,6 +141,36 @@ CREATE TRIGGER chat_bot_dialogs_updated_at
 EXECUTE PROCEDURE set_updated_at_column();
 
 CREATE INDEX ON chat_bot_dialogs USING btree (user_telegram_id, kind, status);
+
+CREATE TABLE ai_api_logs
+(
+    id          UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+    prompt      TEXT        NOT NULL,
+    response    TEXT,
+    user_id     UUID,
+    source_id   UUID,
+    source_type TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
+);
+
+COMMENT ON TABLE ai_api_logs IS 'AI API logs';
+COMMENT ON COLUMN ai_api_logs.id IS 'ID';
+COMMENT ON COLUMN ai_api_logs.prompt IS 'Prompt';
+COMMENT ON COLUMN ai_api_logs.response IS 'Response';
+COMMENT ON COLUMN ai_api_logs.user_id IS 'User ID';
+COMMENT ON COLUMN ai_api_logs.source_id IS 'Source ID';
+COMMENT ON COLUMN ai_api_logs.source_type IS 'Source Type';
+COMMENT ON COLUMN ai_api_logs.created_at IS 'Create date';
+COMMENT ON COLUMN ai_api_logs.updated_at IS 'Update date';
+
+CREATE TRIGGER update_ai_api_logs_updated_at
+    BEFORE UPDATE
+    ON ai_api_logs
+    FOR EACH ROW
+EXECUTE PROCEDURE set_updated_at_column();
+
+CREATE INDEX ON ai_api_logs USING btree (source_id, source_type);
 -- +goose StatementEnd
 
 -- +goose Down

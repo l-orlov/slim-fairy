@@ -92,3 +92,22 @@ func (data *ChatBotDialogDataUserRegistration) IsFilled() bool {
 	return data.Name != nil && data.Age != nil && data.Weight != nil &&
 		data.Height != nil && data.Gender != nil && data.PhysicalActivity != nil
 }
+
+// TODO: fix
+type ChatBotDialogDataGetDiet struct {
+}
+
+// ToJSON marshals data to JSON string
+func (data *ChatBotDialogDataGetDiet) ToJSON() string {
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("ChatBotDialogDataUserRegistration.ToJSON: %v", err)
+	}
+
+	return string(jsonBytes)
+}
+
+// FromJSON unmarshals data form JSON string
+func (data *ChatBotDialogDataGetDiet) FromJSON(s string) error {
+	return json.Unmarshal([]byte(s), data)
+}

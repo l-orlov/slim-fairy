@@ -40,6 +40,22 @@ $$;
 SET default_table_access_method = heap;
 
 --
+-- Name: ai_api_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ai_api_logs (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    prompt text NOT NULL,
+    response text,
+    user_id uuid,
+    source_id uuid,
+    source_type text,
+    created_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    updated_at timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+);
+
+
+--
 -- Name: auth_data; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -147,6 +163,14 @@ ALTER TABLE ONLY public.goose_db_version ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
+-- Name: ai_api_logs ai_api_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_api_logs
+    ADD CONSTRAINT ai_api_logs_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: chat_bot_dialogs chat_bot_dialogs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -176,6 +200,13 @@ ALTER TABLE ONLY public.nutritionists
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_api_logs_source_id_source_type_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ai_api_logs_source_id_source_type_idx ON public.ai_api_logs USING btree (source_id, source_type);
 
 
 --
@@ -239,6 +270,13 @@ CREATE UNIQUE INDEX users_telegram_id_idx ON public.users USING btree (telegram_
 --
 
 CREATE TRIGGER chat_bot_dialogs_updated_at BEFORE UPDATE ON public.chat_bot_dialogs FOR EACH ROW EXECUTE FUNCTION public.set_updated_at_column();
+
+
+--
+-- Name: ai_api_logs update_ai_api_logs_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_ai_api_logs_updated_at BEFORE UPDATE ON public.ai_api_logs FOR EACH ROW EXECUTE FUNCTION public.set_updated_at_column();
 
 
 --

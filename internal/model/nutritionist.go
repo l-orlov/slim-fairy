@@ -12,7 +12,7 @@ type Nutritionist struct {
 	Name       string                `json:"name" db:"name"`
 	Email      *string               `json:"email" db:"email"`
 	Phone      *string               `json:"phone" db:"phone"`
-	TelegramID *int64                `json:"telegram_id"`
+	TelegramID *int64                `json:"telegram_id" db:"telegram_id"`
 	Age        *int                  `json:"age" db:"age"`
 	Gender     *Gender               `json:"gender" db:"gender"`
 	Info       *string               `json:"info" db:"info"`

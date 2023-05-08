@@ -9,7 +9,13 @@ import (
 )
 
 // Column names for models
-var asteriskUsers, asteriskNutritionists, asteriskAuthData, asteriskChatBotDialogs string
+var (
+	asteriskUsers,
+	asteriskNutritionists,
+	asteriskAuthData,
+	asteriskChatBotDialogs,
+	asteriskAIAPILogs string
+)
 
 func init() {
 	// Init column names for models
@@ -17,6 +23,7 @@ func init() {
 	asteriskNutritionists = asterisk(model.Nutritionist{})
 	asteriskAuthData = asterisk(model.AuthData{})
 	asteriskChatBotDialogs = asterisk(model.ChatBotDialog{})
+	asteriskAIAPILogs = asterisk(model.AIAPILog{})
 }
 
 type tableNameGetter interface {

@@ -9,11 +9,15 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/google/uuid"
 	"github.com/l-orlov/slim-fairy/internal/model"
 	"github.com/l-orlov/slim-fairy/internal/store"
+	"github.com/l-orlov/slim-fairy/pkg/ctxutil"
+	"github.com/l-orlov/slim-fairy/pkg/ptrconv"
 	"github.com/pkg/errors"
 )
 
@@ -23,22 +27,48 @@ const (
 	mockFilePathTemplate = "assets/mock_menus/%d.txt"
 )
 
+// Prompts templates
+const (
+	// Get usual diet
+	promptTemplateGetDiet = `
+Составь диету на неделю с тремя приемами пищи в день и %s.
+Укажи список ингредиентов в конце.
+
+Возраст: %d.
+Рост: %d см.
+Вес: %d кг.
+Пол: %s.
+Уровень физической активности: %s`
+	// Get diet for interval fasting
+	promptTemplateGetIntervalDiet = `
+Составь диету для интервального голодания на неделю с двумя приемами пищи в день и без перекусов.
+Укажи список ингредиентов в конце.
+
+Возраст: %d.
+Рост: %d см.
+Вес: %d кг.
+Пол: %s.
+Уровень физической активности: %s`
+)
+
 const (
 	menuFileName = "menu.txt"
 )
 
-// TODO: comment
+// Timeouts
+const (
+	getDietFromAITimeout = 2 * time.Minute
+	createLogTimeout     = 1 * time.Minute
+)
+
+// GetDietFromAI gets diet from AI and sends to user
 func (h *LogicHandlers) GetDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 	const errMsg = "Что-то пошло не так. Попробуйте еще раз"
-	// если нет:
-	// - вот пример диеты. пройдите регистрацию, чтобы составил диету под ваши параметры.
-	// если есть:
-	// - в горутине получение диеты
-	// - Подождите немного. Составляю диету.
-	// wg.Wait и потом ответ файликом
+
+	executionCtx := context.Background()
 
 	// Check if user exists
-	user, err := h.storage.GetUserByTelegramID(context.Background(), ctx.EffectiveSender.Id())
+	user, err := h.storage.GetUserByTelegramID(executionCtx, ctx.EffectiveSender.Id())
 	if err != nil {
 		// User not found
 		if errors.Is(err, store.ErrNotFound) {
@@ -70,30 +100,48 @@ func (h *LogicHandlers) GetDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 		Gender:           *user.Gender,
 		PhysicalActivity: *user.PhysicalActivity,
 		// TODO: fix
-		MealTimes:  2,
+		MealTimes:  3,
 		SnackTimes: 1,
 	}
 
-	// write request to db
+	// Build prompt for AI
+	prompt := buildPromptForGetDiet(params)
 
 	// Get diet concurrently
 	wg := &sync.WaitGroup{}
 	var diet string
 	wg.Add(1)
-	go func() {
+	go func(ctx context.Context) {
 		defer wg.Done()
 
-		var dietErr error
-		diet, dietErr = h.getDietFromAI(params)
-		if dietErr != nil {
-			log.Printf("h.getDietFromAI: %v", err)
+		var ierr error
+		diet, ierr = h.getDietFromAI(ctx, prompt)
+		if ierr != nil {
+			log.Printf("h.getDietFromAI: %v", ierr)
 		}
-	}()
+	}(ctxutil.Detach(executionCtx))
 
 	reply(b, ctx, "Подождите немного. Составляю диету")
 	wg.Wait()
 
-	// write response to db
+	// Create prompt log in db
+	go func(ctx context.Context) {
+		reqCtx, cancel := context.WithTimeout(ctx, createLogTimeout)
+		defer cancel()
+
+		promptLog := &model.AIAPILog{
+			Prompt:   prompt,
+			Response: ptrconv.Ptr(diet),
+			UserID:   user.ID,
+			// TODO: fill
+			SourceID:   uuid.UUID{},
+			SourceType: model.AIAPILogsSourceTypeChatbotDialog,
+		}
+		ierr := h.storage.CreateAIAPILog(reqCtx, promptLog)
+		if ierr != nil {
+			log.Printf("h.storage.CreateAIAPILog: %v", ierr)
+		}
+	}(ctxutil.Detach(executionCtx))
 
 	err = h.sendDiet(b, ctx, diet)
 	if err != nil {
@@ -105,11 +153,13 @@ func (h *LogicHandlers) GetDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 	return nil
 }
 
-func (h *LogicHandlers) getDietFromAI(params *model.GetDietParams) (diet string, err error) {
-	executionCtx := context.Background()
-	diet, err = h.dietGetter.GetDietByParams(executionCtx, params)
+func (h *LogicHandlers) getDietFromAI(ctx context.Context, prompt string) (string, error) {
+	reqCtx, cancel := context.WithTimeout(ctx, getDietFromAITimeout)
+	defer cancel()
+
+	diet, err := h.aiClient.SendRequest(reqCtx, prompt)
 	if err != nil {
-		return "", errors.Wrap(err, "h.dietGetter.GetDietByParams")
+		return "", errors.Wrap(err, "h.aiClient.SendRequest")
 	}
 
 	return diet, nil
@@ -174,4 +224,38 @@ func getMockedDiet() (string, error) {
 	}
 
 	return string(fileBytes), nil
+}
+
+// buildPromptForGetDiet builds prompt for getting diet from AI
+func buildPromptForGetDiet(params *model.GetDietParams) string {
+	// Get diet for interval fasting
+	if params.MealTimes == 2 {
+		return strings.TrimSpace(fmt.Sprintf(
+			promptTemplateGetIntervalDiet,
+			params.Age,
+			params.Height,
+			params.Weight,
+			params.Gender.DescriptionRu(),
+			params.PhysicalActivity.DescriptionRu(),
+		))
+	}
+
+	// Set snack times
+	snackTimes := "без перекусов"
+	if params.SnackTimes == 1 {
+		snackTimes = "с одним перекусом"
+	} else if params.SnackTimes == 2 {
+		snackTimes = "с двумя перекусами"
+	}
+
+	// Get usual diet
+	return strings.TrimSpace(fmt.Sprintf(
+		promptTemplateGetDiet,
+		snackTimes,
+		params.Age,
+		params.Height,
+		params.Weight,
+		params.Gender.DescriptionRu(),
+		params.PhysicalActivity.DescriptionRu(),
+	))
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/conversation"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/callbackquery"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/message"
 	"github.com/l-orlov/slim-fairy/internal/store"
 	lhandlers "github.com/l-orlov/slim-fairy/internal/tg-bot/logic-handlers"
@@ -60,8 +61,6 @@ func New(
 
 	// command to introduce the bot
 	dispatcher.AddHandler(handlers.NewCommand("start", logicHandlers.Start))
-	// command to get diet menu from AI
-	dispatcher.AddHandler(handlers.NewCommand("getdietfromai", logicHandlers.GetDietFromAI))
 	// command to register user
 	dispatcher.AddHandler(handlers.NewConversation(
 		[]ext.Handler{handlers.NewCommand("register", logicHandlers.StartUserRegistration)},
@@ -75,7 +74,27 @@ func New(
 			lhandlers.RegisterConfirm:          {handlers.NewMessage(noCommands, logicHandlers.ConfirmUserRegistration)},
 		},
 		&handlers.ConversationOpts{
-			Exits:        []ext.Handler{handlers.NewCommand("cancelreg", logicHandlers.CancelUserRegistration)},
+			Exits:        []ext.Handler{handlers.NewCommand("cancel", logicHandlers.CancelUserRegistration)},
+			StateStorage: conversation.NewInMemoryStorage(conversation.KeyStrategySenderAndChat),
+		},
+	))
+
+	// command to get diet menu from AI
+	dispatcher.AddHandler(handlers.NewConversation(
+		[]ext.Handler{handlers.NewCommand("getdietfromai", logicHandlers.StartGettingDiet)},
+		map[string][]ext.Handler{
+			lhandlers.GetDietFromAISelectMeals: {
+				handlers.NewCallback(callbackquery.Equal(lhandlers.GetDietFromAICbSelectMeals2), logicHandlers.SelectMeals2),
+				handlers.NewCallback(callbackquery.Equal(lhandlers.GetDietFromAICbSelectMeals3), logicHandlers.SelectMeals3),
+			},
+			lhandlers.GetDietFromAISelectSnacks: {
+				handlers.NewCallback(callbackquery.Equal(lhandlers.GetDietFromAICbSelectSnacks0), logicHandlers.SelectSnacks0),
+				handlers.NewCallback(callbackquery.Equal(lhandlers.GetDietFromAICbSelectSnacks1), logicHandlers.SelectSnacks1),
+				handlers.NewCallback(callbackquery.Equal(lhandlers.GetDietFromAICbSelectSnacks2), logicHandlers.SelectSnacks2),
+			},
+		},
+		&handlers.ConversationOpts{
+			Exits:        []ext.Handler{handlers.NewCommand("cancel", logicHandlers.CancelGettingDiet)},
 			StateStorage: conversation.NewInMemoryStorage(conversation.KeyStrategySenderAndChat),
 		},
 	))

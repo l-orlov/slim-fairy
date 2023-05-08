@@ -40,5 +40,6 @@ func main() {
 	// Run bot
 	bot.Run()
 
+	// TODO: graceful shut down
 	_ = ctx
 }

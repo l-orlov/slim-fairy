@@ -14,13 +14,13 @@ const startMsgTemplate = `
 
 /start - Начать диалог
 /register - Пройти регистрацию
-/cancelreg - Прервать регистрацию
-/getdietfromai - Получить диету от ИИ`
+/getdietfromai - Получить диету от ИИ
+/cancel - Прервать любое начатое действие`
 
 // Start introduces the bot.
 func (h *LogicHandlers) Start(b *gotgbot.Bot, ctx *ext.Context) error {
 	replyMsg := fmt.Sprintf(startMsgTemplate, b.User.Username)
-	reply(b, ctx, replyMsg)
+	reply(b, ctx, replyMsg, nil)
 
 	return nil
 }

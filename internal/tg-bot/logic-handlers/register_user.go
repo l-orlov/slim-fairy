@@ -10,7 +10,6 @@ import (
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
-	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/l-orlov/slim-fairy/internal/model"
 	"github.com/l-orlov/slim-fairy/internal/store"
 	"github.com/l-orlov/slim-fairy/pkg/ptrconv"
@@ -22,7 +21,7 @@ import (
 // кнопки сделать, где это нужно.
 // метод для обновления пользовательских данных.
 
-// User registration handler states
+// Handler states for user registration
 const (
 	RegisterName             = "name"
 	RegisterAge              = "age"
@@ -40,7 +39,7 @@ const userRegistrationStartInfo = `
 Отвечайте мне в следующем сообщении.
 
 Если решите прервать регистрацию, то используйте команду:
-/cancelreg
+/cancel
 
 Начнем. Как вас зовут?`
 
@@ -58,7 +57,7 @@ func (h *LogicHandlers) StartUserRegistration(b *gotgbot.Bot, ctx *ext.Context) 
 		}
 
 		// Reply to user
-		nextState = replyInConversation(b, ctx, replyMsg, RegisterName)
+		nextState = replyInConversation(b, ctx, replyMsg, RegisterName, nil)
 	}()
 
 	// Check if user exists
@@ -98,7 +97,7 @@ func (h *LogicHandlers) RegisterUserName(b *gotgbot.Bot, ctx *ext.Context) (next
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterName, RegisterAge)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterName, RegisterAge, nil)
 	}()
 
 	// Validate name
@@ -147,7 +146,7 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterAge, RegisterWeight)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterAge, RegisterWeight, nil)
 	}()
 
 	ageNumber, err := strconv.Atoi(input)
@@ -217,7 +216,7 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterWeight, RegisterHeight)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterWeight, RegisterHeight, nil)
 	}()
 
 	weight, err := strconv.Atoi(input)
@@ -287,7 +286,7 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterHeight, RegisterGender)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterHeight, RegisterGender, nil)
 	}()
 
 	height, err := strconv.Atoi(input)
@@ -358,7 +357,7 @@ func (h *LogicHandlers) RegisterUserGender(b *gotgbot.Bot, ctx *ext.Context) (ne
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterGender, RegisterPhysicalActivity)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterGender, RegisterPhysicalActivity, nil)
 	}()
 
 	if input != "м" && input != "ж" {
@@ -436,7 +435,7 @@ func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Co
 		}
 
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterPhysicalActivity, RegisterConfirm)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterPhysicalActivity, RegisterConfirm, nil)
 	}()
 
 	if input != "н" && input != "с" && input != "в" {
@@ -537,7 +536,7 @@ func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context
 		}
 
 		// Reply to user
-		nextState = replyInConversation(b, ctx, replyMsg, RegisterConfirm)
+		nextState = replyInConversation(b, ctx, replyMsg, RegisterConfirm, nil)
 	}()
 
 	if input != "да" && input != "нет" {
@@ -611,42 +610,6 @@ func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context
 /getdietfromai`
 	needEndConversation = true
 	return nil
-}
-
-func replyWithStatesInConversation(
-	b *gotgbot.Bot, ctx *ext.Context,
-	replyMsg string, success bool,
-	failureStateName, successStateName string,
-) (nextState error) {
-	// If not success -> try again
-	if !success {
-		return replyInConversation(b, ctx, replyMsg, failureStateName)
-	}
-
-	// If success -> go to next state
-	return replyInConversation(b, ctx, replyMsg, successStateName)
-}
-
-func replyInConversation(
-	b *gotgbot.Bot, ctx *ext.Context,
-	replyMsg string, nextStateName string,
-) (nextState error) {
-	reply(b, ctx, replyMsg)
-	return handlers.NextConversationState(nextStateName)
-}
-
-func endConversation(b *gotgbot.Bot, ctx *ext.Context, replyMsg string) (nextState error) {
-	reply(b, ctx, replyMsg)
-	return handlers.EndConversation()
-}
-
-func reply(b *gotgbot.Bot, ctx *ext.Context, replyMsg string) {
-	_, err := ctx.EffectiveMessage.Reply(b, replyMsg, &gotgbot.SendMessageOpts{
-		ParseMode: "html",
-	})
-	if err != nil {
-		log.Printf("ctx.EffectiveMessage.Reply: %v", err)
-	}
 }
 
 func buildUserFromDialogData(telegramID int64, data *model.ChatBotDialogDataUserRegistration) *model.User {

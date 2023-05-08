@@ -3,16 +3,14 @@ package logic_handlers
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
-	"math/rand"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/google/uuid"
 	"github.com/l-orlov/slim-fairy/internal/model"
 	"github.com/l-orlov/slim-fairy/internal/store"
@@ -21,10 +19,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Mocked diets config
+// Handler states for getting diet from AI
 const (
-	mocksNumber          = 13
-	mockFilePathTemplate = "assets/mock_menus/%d.txt"
+	GetDietFromAISelectMeals  = "select_meals"
+	GetDietFromAISelectSnacks = "select_snacks"
+)
+
+// Callback keys for getting diet from AI
+const (
+	GetDietFromAICbSelectMeals2  = "select_meals_2"
+	GetDietFromAICbSelectMeals3  = "select_meals_3"
+	GetDietFromAICbSelectSnacks0 = "select_snacks_0"
+	GetDietFromAICbSelectSnacks1 = "select_snacks_1"
+	GetDietFromAICbSelectSnacks2 = "select_snacks_2"
 )
 
 // Prompts templates
@@ -57,12 +64,151 @@ const (
 
 // Timeouts
 const (
-	getDietFromAITimeout = 2 * time.Minute
-	createLogTimeout     = 1 * time.Minute
+	sendRequestToAITimeout = 2 * time.Minute
+	createLogTimeout       = 1 * time.Minute
 )
 
-// GetDietFromAI gets diet from AI and sends to user
-func (h *LogicHandlers) GetDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
+// StartGettingDiet .
+func (h *LogicHandlers) StartGettingDiet(b *gotgbot.Bot, ctx *ext.Context) error {
+	opts := &gotgbot.SendMessageOpts{
+		ParseMode: "html",
+		ReplyMarkup: gotgbot.InlineKeyboardMarkup{
+			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
+				{Text: "2", CallbackData: GetDietFromAICbSelectMeals2},
+				{Text: "3", CallbackData: GetDietFromAICbSelectMeals3},
+			}},
+		},
+	}
+	return replyInConversation(b, ctx, "Выбери количество приемов пищи в день", GetDietFromAISelectMeals, opts)
+}
+
+// CancelGettingDiet .
+func (h *LogicHandlers) CancelGettingDiet(b *gotgbot.Bot, ctx *ext.Context) error {
+	return endConversation(b, ctx, "ОК, тогда в следующий раз")
+}
+
+// SelectMeals2 .
+func (h *LogicHandlers) SelectMeals2(b *gotgbot.Bot, ctx *ext.Context) error {
+	cb := ctx.Update.CallbackQuery
+
+	_, err := cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали 2",
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали 2 приема пищи в день", nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
+	}
+
+	return h.sendDietFromAI(b, ctx, model.MealsAndSnacksNumber{
+		MealsNumberPerDay:  2,
+		SnacksNumberPerDay: 0,
+	})
+}
+
+// SelectMeals3 .
+func (h *LogicHandlers) SelectMeals3(b *gotgbot.Bot, ctx *ext.Context) error {
+	cb := ctx.Update.CallbackQuery
+
+	_, err := cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали 3",
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали 3 приема пищи в день", nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
+	}
+
+	opts := &gotgbot.SendMessageOpts{
+		ParseMode: "html",
+		ReplyMarkup: gotgbot.InlineKeyboardMarkup{
+			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
+				{Text: "0", CallbackData: GetDietFromAICbSelectSnacks0},
+				{Text: "1", CallbackData: GetDietFromAICbSelectSnacks1},
+				{Text: "2", CallbackData: GetDietFromAICbSelectSnacks2},
+			}},
+		},
+	}
+	return replyInConversation(b, ctx, "Выбери количество перекусов в день", GetDietFromAISelectSnacks, opts)
+}
+
+// SelectSnacks0 .
+func (h *LogicHandlers) SelectSnacks0(b *gotgbot.Bot, ctx *ext.Context) error {
+	cb := ctx.Update.CallbackQuery
+
+	_, err := cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали 0",
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали 0 перекусов в день", nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
+	}
+
+	return h.sendDietFromAI(b, ctx, model.MealsAndSnacksNumber{
+		MealsNumberPerDay:  3,
+		SnacksNumberPerDay: 0,
+	})
+}
+
+// SelectSnacks1 .
+func (h *LogicHandlers) SelectSnacks1(b *gotgbot.Bot, ctx *ext.Context) error {
+	cb := ctx.Update.CallbackQuery
+
+	_, err := cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали 1",
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали 1 перекусов в день", nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
+	}
+
+	return h.sendDietFromAI(b, ctx, model.MealsAndSnacksNumber{
+		MealsNumberPerDay:  3,
+		SnacksNumberPerDay: 1,
+	})
+}
+
+// SelectSnacks2 .
+func (h *LogicHandlers) SelectSnacks2(b *gotgbot.Bot, ctx *ext.Context) error {
+	cb := ctx.Update.CallbackQuery
+
+	_, err := cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали 2",
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали 2 перекуса в день", nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
+	}
+
+	return h.sendDietFromAI(b, ctx, model.MealsAndSnacksNumber{
+		MealsNumberPerDay:  3,
+		SnacksNumberPerDay: 2,
+	})
+}
+
+// sendDietFromAI gets diet from AI and sends to user
+func (h *LogicHandlers) sendDietFromAI(
+	b *gotgbot.Bot, ctx *ext.Context,
+	mealsAndSnacks model.MealsAndSnacksNumber,
+) error {
 	const errMsg = "Что-то пошло не так. Попробуйте еще раз"
 
 	executionCtx := context.Background()
@@ -72,36 +218,32 @@ func (h *LogicHandlers) GetDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 	if err != nil {
 		// User not found
 		if errors.Is(err, store.ErrNotFound) {
-			ierr := sendMockedDiet(b, ctx)
+			ierr := sendMockedDiet(b, ctx, mealsAndSnacks)
 			if ierr != nil {
 				log.Printf("sendMockedDiet: %v", err)
-				reply(b, ctx, errMsg)
-				return nil
+				return endConversation(b, ctx, errMsg)
 			}
-			return nil
+			return handlers.EndConversation()
 		}
 
 		log.Printf("h.storage.GetUserByTelegramID: %v", err)
-		reply(b, ctx, errMsg)
-		return nil
+		return endConversation(b, ctx, errMsg)
 	}
 
 	// Check if user data filled
 	if !user.IsFilledForGetDiet() {
 		// TODO: send info about update data
-		reply(b, ctx, "Не все параметры заполнены для составления диеты. Заполните и попробуйте снова")
-		return nil
+		msg := "Не все параметры заполнены для составления диеты. Заполните и попробуйте снова"
+		return endConversation(b, ctx, msg)
 	}
 
 	params := &model.GetDietParams{
-		Age:              *user.Age,
-		Weight:           *user.Weight,
-		Height:           *user.Height,
-		Gender:           *user.Gender,
-		PhysicalActivity: *user.PhysicalActivity,
-		// TODO: fix
-		MealTimes:  3,
-		SnackTimes: 1,
+		Age:                  *user.Age,
+		Weight:               *user.Weight,
+		Height:               *user.Height,
+		Gender:               *user.Gender,
+		PhysicalActivity:     *user.PhysicalActivity,
+		MealsAndSnacksNumber: mealsAndSnacks,
 	}
 
 	// Build prompt for AI
@@ -115,13 +257,13 @@ func (h *LogicHandlers) GetDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 		defer wg.Done()
 
 		var ierr error
-		diet, ierr = h.getDietFromAI(ctx, prompt)
+		diet, ierr = h.sendRequestToAI(ctx, prompt)
 		if ierr != nil {
-			log.Printf("h.getDietFromAI: %v", ierr)
+			log.Printf("h.sendRequestToAI: %v", ierr)
 		}
 	}(ctxutil.Detach(executionCtx))
 
-	reply(b, ctx, "Подождите немного. Составляю диету")
+	reply(b, ctx, "Подождите немного. Составляю диету", nil)
 	wg.Wait()
 
 	// Create prompt log in db
@@ -146,15 +288,14 @@ func (h *LogicHandlers) GetDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 	err = h.sendDiet(b, ctx, diet)
 	if err != nil {
 		log.Printf("h.sendDiet: %v", err)
-		reply(b, ctx, errMsg)
-		return nil
+		return endConversation(b, ctx, errMsg)
 	}
 
-	return nil
+	return handlers.EndConversation()
 }
 
-func (h *LogicHandlers) getDietFromAI(ctx context.Context, prompt string) (string, error) {
-	reqCtx, cancel := context.WithTimeout(ctx, getDietFromAITimeout)
+func (h *LogicHandlers) sendRequestToAI(ctx context.Context, prompt string) (string, error) {
+	reqCtx, cancel := context.WithTimeout(ctx, sendRequestToAITimeout)
 	defer cancel()
 
 	diet, err := h.aiClient.SendRequest(reqCtx, prompt)
@@ -169,67 +310,18 @@ func (h *LogicHandlers) sendDiet(b *gotgbot.Bot, ctx *ext.Context, diet string) 
 	reader := strings.NewReader(diet)
 
 	const caption = "Вот диета для вас от ИИ (Искусственного Интеллекта)"
-	err := sendDocument(b, ctx, reader, caption)
+	err := sendDocument(b, ctx, reader, menuFileName, caption)
 	if err != nil {
 		return errors.Wrap(err, "sendDocument")
 	}
 
 	return nil
-}
-
-func sendMockedDiet(b *gotgbot.Bot, ctx *ext.Context) error {
-	diet, err := getMockedDiet()
-	if err != nil {
-		return errors.Wrap(err, "getMockedDiet")
-	}
-
-	reader := strings.NewReader(diet)
-
-	const caption = `
-Вот пример диеты. Пройдите регистрацию, чтобы составил диету под ваши параметры:
-/register
-`
-	err = sendDocument(b, ctx, reader, caption)
-	if err != nil {
-		return errors.Wrap(err, "sendDocument")
-	}
-
-	return nil
-}
-
-func sendDocument(
-	b *gotgbot.Bot, ctx *ext.Context,
-	file io.Reader, caption string) error {
-	_, err := b.SendDocument(ctx.EffectiveChat.Id, gotgbot.NamedFile{
-		File:     file,
-		FileName: menuFileName,
-	}, &gotgbot.SendDocumentOpts{
-		Caption:          caption,
-		ReplyToMessageId: ctx.EffectiveMessage.MessageId,
-	})
-	if err != nil {
-		return errors.Wrap(err, "b.SendDocument")
-	}
-
-	return nil
-}
-
-func getMockedDiet() (string, error) {
-	fileNum := rand.Int31n(mocksNumber)
-	path := fmt.Sprintf(mockFilePathTemplate, fileNum)
-
-	fileBytes, err := os.ReadFile(path)
-	if err != nil {
-		return "", errors.Wrap(err, "os.ReadFile")
-	}
-
-	return string(fileBytes), nil
 }
 
 // buildPromptForGetDiet builds prompt for getting diet from AI
 func buildPromptForGetDiet(params *model.GetDietParams) string {
 	// Get diet for interval fasting
-	if params.MealTimes == 2 {
+	if params.MealsNumberPerDay == 2 {
 		return strings.TrimSpace(fmt.Sprintf(
 			promptTemplateGetIntervalDiet,
 			params.Age,
@@ -241,17 +333,17 @@ func buildPromptForGetDiet(params *model.GetDietParams) string {
 	}
 
 	// Set snack times
-	snackTimes := "без перекусов"
-	if params.SnackTimes == 1 {
-		snackTimes = "с одним перекусом"
-	} else if params.SnackTimes == 2 {
-		snackTimes = "с двумя перекусами"
+	snacksNumber := "без перекусов"
+	if params.SnacksNumberPerDay == 1 {
+		snacksNumber = "с одним перекусом"
+	} else if params.SnacksNumberPerDay == 2 {
+		snacksNumber = "с двумя перекусами"
 	}
 
 	// Get usual diet
 	return strings.TrimSpace(fmt.Sprintf(
 		promptTemplateGetDiet,
-		snackTimes,
+		snacksNumber,
 		params.Age,
 		params.Height,
 		params.Weight,

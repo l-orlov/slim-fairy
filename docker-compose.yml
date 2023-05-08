@@ -19,10 +19,10 @@ services:
 #    command: ./service
 #    ports:
 #      - "8080:8080"
-#
-#  slim-fairy-tg-bot:
-#    container_name: slim-fairy-tg-bot
-#    build: .
-#    depends_on:
-#      - postgres
-#    command: ./tg-bot
+
+  slim-fairy-tg-bot:
+    container_name: slim-fairy-tg-bot
+    build: .
+    depends_on:
+      - postgres
+    command: ./tg-bot

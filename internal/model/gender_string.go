@@ -8,13 +8,13 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[GenderMan-1]
-	_ = x[GenderWoman-2]
+	_ = x[GenderMale-1]
+	_ = x[GenderFemale-2]
 }
 
-const _Gender_name = "GenderManGenderWoman"
+const _Gender_name = "GenderMaleGenderFemale"
 
-var _Gender_index = [...]uint8{0, 9, 20}
+var _Gender_index = [...]uint8{0, 10, 22}
 
 func (i Gender) String() string {
 	i -= 1

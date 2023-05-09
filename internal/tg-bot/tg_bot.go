@@ -65,13 +65,23 @@ func New(
 	dispatcher.AddHandler(handlers.NewConversation(
 		[]ext.Handler{handlers.NewCommand("register", logicHandlers.StartUserRegistration)},
 		map[string][]ext.Handler{
-			lhandlers.RegisterName:             {handlers.NewMessage(noCommands, logicHandlers.RegisterUserName)},
-			lhandlers.RegisterAge:              {handlers.NewMessage(noCommands, logicHandlers.RegisterUserAge)},
-			lhandlers.RegisterWeight:           {handlers.NewMessage(noCommands, logicHandlers.RegisterUserWeight)},
-			lhandlers.RegisterHeight:           {handlers.NewMessage(noCommands, logicHandlers.RegisterUserHeight)},
-			lhandlers.RegisterGender:           {handlers.NewMessage(noCommands, logicHandlers.RegisterUserGender)},
-			lhandlers.RegisterPhysicalActivity: {handlers.NewMessage(noCommands, logicHandlers.RegisterUserPhysicalActivity)},
-			lhandlers.RegisterConfirm:          {handlers.NewMessage(noCommands, logicHandlers.ConfirmUserRegistration)},
+			lhandlers.RegisterName:   {handlers.NewMessage(noCommands, logicHandlers.RegisterUserName)},
+			lhandlers.RegisterAge:    {handlers.NewMessage(noCommands, logicHandlers.RegisterUserAge)},
+			lhandlers.RegisterWeight: {handlers.NewMessage(noCommands, logicHandlers.RegisterUserWeight)},
+			lhandlers.RegisterHeight: {handlers.NewMessage(noCommands, logicHandlers.RegisterUserHeight)},
+			lhandlers.RegisterGender: {
+				handlers.NewCallback(callbackquery.Equal(lhandlers.RegisterGenderCbMale), logicHandlers.RegisterUserGenderMale),
+				handlers.NewCallback(callbackquery.Equal(lhandlers.RegisterGenderCbFemale), logicHandlers.RegisterUserGenderFemale),
+			},
+			lhandlers.RegisterPhysicalActivity: {
+				handlers.NewCallback(callbackquery.Equal(lhandlers.RegisterPhysicalActivityCbLow), logicHandlers.RegisterUserPhysicalActivityLow),
+				handlers.NewCallback(callbackquery.Equal(lhandlers.RegisterPhysicalActivityCbMedium), logicHandlers.RegisterUserPhysicalActivityMedium),
+				handlers.NewCallback(callbackquery.Equal(lhandlers.RegisterPhysicalActivityCbHigh), logicHandlers.RegisterUserPhysicalActivityHigh),
+			},
+			lhandlers.RegisterConfirm: {
+				handlers.NewCallback(callbackquery.Equal(lhandlers.RegisterConfirmCbYes), logicHandlers.ConfirmUserRegistrationYes),
+				handlers.NewCallback(callbackquery.Equal(lhandlers.RegisterConfirmCbNo), logicHandlers.ConfirmUserRegistrationNo),
+			},
 		},
 		&handlers.ConversationOpts{
 			Exits:        []ext.Handler{handlers.NewCommand("cancel", logicHandlers.CancelUserRegistration)},

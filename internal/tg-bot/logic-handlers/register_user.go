@@ -6,7 +6,6 @@ import (
 	"html"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
@@ -18,7 +17,6 @@ import (
 
 // TODO:
 // Escape string всюду. Как обезопаситься от sql injections?
-// кнопки сделать, где это нужно.
 // метод для обновления пользовательских данных.
 
 // Handler states for user registration
@@ -30,6 +28,17 @@ const (
 	RegisterGender           = "gender"
 	RegisterPhysicalActivity = "physicalactivity"
 	RegisterConfirm          = "сonfirm"
+)
+
+// Callback keys for getting diet from AI
+const (
+	RegisterGenderCbMale             = "gender_male"
+	RegisterGenderCbFemale           = "gender_female"
+	RegisterPhysicalActivityCbLow    = "physicalactivity_low"
+	RegisterPhysicalActivityCbMedium = "physicalactivity_medium"
+	RegisterPhysicalActivityCbHigh   = "physicalactivity_high"
+	RegisterConfirmCbYes             = "сonfirm_yes"
+	RegisterConfirmCbNo              = "сonfirm_no"
 )
 
 // userRegistrationStartInfo contains start info for user registration
@@ -283,10 +292,11 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	var (
 		replyMsg string
 		success  bool
+		opts     *gotgbot.SendMessageOpts
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterHeight, RegisterGender, nil)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterHeight, RegisterGender, opts)
 	}()
 
 	height, err := strconv.Atoi(input)
@@ -340,34 +350,47 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	}
 
 	// Success -> go to next state
-	replyMsg = "ОК.\nКакой у вас пол?\nНапишите: м (мужчина) или ж (женщина)"
+	replyMsg = "ОК.\nВаш пол? Выберите ниже"
 	success = true
+	opts = &gotgbot.SendMessageOpts{
+		ParseMode: "html",
+		ReplyMarkup: gotgbot.InlineKeyboardMarkup{
+			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
+				{Text: "мужчина", CallbackData: RegisterGenderCbMale},
+				{Text: "женщина", CallbackData: RegisterGenderCbFemale},
+			}},
+		},
+	}
 
 	return nil
 }
 
-// RegisterUserGender registers user Gender
-func (h *LogicHandlers) RegisterUserGender(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
-	input := ctx.EffectiveMessage.Text
-	input = strings.ToLower(input)
+// RegisterUserGenderMale registers user gender with Male value
+func (h *LogicHandlers) RegisterUserGenderMale(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
+	return h.registerUserGender(b, ctx, model.GenderMale)
+}
 
+// RegisterUserGenderFemale registers user gender with Female value
+func (h *LogicHandlers) RegisterUserGenderFemale(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
+	return h.registerUserGender(b, ctx, model.GenderFemale)
+}
+
+// registerUserGender registers user gender
+func (h *LogicHandlers) registerUserGender(
+	b *gotgbot.Bot, ctx *ext.Context, gender model.Gender,
+) (nextState error) {
 	var (
 		replyMsg string
 		success  bool
+		opts     *gotgbot.SendMessageOpts
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterGender, RegisterPhysicalActivity, nil)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterGender, RegisterPhysicalActivity, opts)
 	}()
 
-	if input != "м" && input != "ж" {
-		// Not valid -> try again
-		replyMsg = "Попробуйте еще раз. Напишите: м или ж"
-		return nil
-	}
-
 	// Update dialog data
-	const errMsg = "Что-то пошло не так. Введите пол еще раз"
+	const errMsg = "Что-то пошло не так. Выберите ваш пол еще раз"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -393,10 +416,7 @@ func (h *LogicHandlers) RegisterUserGender(b *gotgbot.Bot, ctx *ext.Context) (ne
 		return nil
 	}
 
-	dialogData.Gender = ptrconv.Ptr(model.GenderMan)
-	if input == "ж" {
-		dialogData.Gender = ptrconv.Ptr(model.GenderWoman)
-	}
+	dialogData.Gender = ptrconv.Ptr(gender)
 	dialog.DataJSON = dialogData.ToJSON()
 	err = h.storage.UpdateChatBotDialog(dbCtx, dialog)
 	if err != nil {
@@ -407,25 +427,62 @@ func (h *LogicHandlers) RegisterUserGender(b *gotgbot.Bot, ctx *ext.Context) (ne
 		return nil
 	}
 
+	// Send callback answer
+	genderDesription := gender.DescriptionRu()
+	cb := ctx.Update.CallbackQuery
+	_, err = cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали: " + genderDesription,
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали пол: "+genderDesription, nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
+	}
+
 	// Success -> go to next state
-	replyMsg = `
-Принято.
-Теперь какой у вас уровень физической активности?
-Напишите: н (низкий) или с (средний) или в (высокий)`
+	replyMsg = "Принято.\nВаш уровень физической активности? Выберите ниже"
 	success = true
+	opts = &gotgbot.SendMessageOpts{
+		ParseMode: "html",
+		ReplyMarkup: gotgbot.InlineKeyboardMarkup{
+			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
+				{Text: "низкий", CallbackData: RegisterPhysicalActivityCbLow},
+				{Text: "средний", CallbackData: RegisterPhysicalActivityCbMedium},
+				{Text: "высокий", CallbackData: RegisterPhysicalActivityCbHigh},
+			}},
+		},
+	}
 
 	return nil
 }
 
-// RegisterUserPhysicalActivity registers user physical activity
-func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
-	input := ctx.EffectiveMessage.Text
-	input = strings.ToLower(input)
+// RegisterUserPhysicalActivityLow registers user physical activity with Low value
+func (h *LogicHandlers) RegisterUserPhysicalActivityLow(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
+	return h.registerUserPhysicalActivity(b, ctx, model.PhysicalActivityLevelLow)
+}
 
+// RegisterUserPhysicalActivityMedium registers user physical activity with Medium value
+func (h *LogicHandlers) RegisterUserPhysicalActivityMedium(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
+	return h.registerUserPhysicalActivity(b, ctx, model.PhysicalActivityLevelMedium)
+}
+
+// RegisterUserPhysicalActivityHigh registers user physical activity with High value
+func (h *LogicHandlers) RegisterUserPhysicalActivityHigh(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
+	return h.registerUserPhysicalActivity(b, ctx, model.PhysicalActivityLevelHigh)
+}
+
+// registerUserPhysicalActivity registers user physical activity
+func (h *LogicHandlers) registerUserPhysicalActivity(
+	b *gotgbot.Bot, ctx *ext.Context, activityLevel model.PhysicalActivityLevel,
+) (nextState error) {
 	var (
 		replyMsg            string
 		success             bool
 		needEndConversation bool
+		opts                *gotgbot.SendMessageOpts
 	)
 	defer func() {
 		// End if needed
@@ -435,17 +492,11 @@ func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Co
 		}
 
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterPhysicalActivity, RegisterConfirm, nil)
+		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterPhysicalActivity, RegisterConfirm, opts)
 	}()
 
-	if input != "н" && input != "с" && input != "в" {
-		// Not valid -> try again
-		replyMsg = "Попробуйте еще раз. Напишите: н или с или в"
-		return nil
-	}
-
 	// Update dialog data
-	const errMsg = "Что-то пошло не так. Введите пол еще раз"
+	const errMsg = "Что-то пошло не так. Выберите пол еще раз"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -471,12 +522,7 @@ func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Co
 		return nil
 	}
 
-	dialogData.PhysicalActivity = ptrconv.Ptr(model.PhysicalActivityLevelLow)
-	if input == "с" {
-		dialogData.PhysicalActivity = ptrconv.Ptr(model.PhysicalActivityLevelMedium)
-	} else if input == "в" {
-		dialogData.PhysicalActivity = ptrconv.Ptr(model.PhysicalActivityLevelHigh)
-	}
+	dialogData.PhysicalActivity = ptrconv.Ptr(activityLevel)
 	dialog.DataJSON = dialogData.ToJSON()
 	err = h.storage.UpdateChatBotDialog(dbCtx, dialog)
 	if err != nil {
@@ -485,6 +531,21 @@ func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Co
 		// Error -> try again
 		replyMsg = errMsg
 		return nil
+	}
+
+	// Send callback answer
+	activityDesription := activityLevel.DescriptionRu()
+	cb := ctx.Update.CallbackQuery
+	_, err = cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали: " + activityDesription,
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали уровень физической активности: "+activityDesription, nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
 	}
 
 	// Check all data is filled
@@ -511,19 +572,25 @@ func (h *LogicHandlers) RegisterUserPhysicalActivity(b *gotgbot.Bot, ctx *ext.Co
 Уровень физической активности: %s
 
 Подтвердите, что данные верны.
-Напишите: да (верны) или нет (не верны)`,
+Выберите: да (верны) или нет (не верны)`,
 		*dialogData.Name, *dialogData.Age, *dialogData.Weight, *dialogData.Height,
 		dialogData.Gender.DescriptionRu(), dialogData.PhysicalActivity.DescriptionRu())
 	success = true
+	opts = &gotgbot.SendMessageOpts{
+		ParseMode: "html",
+		ReplyMarkup: gotgbot.InlineKeyboardMarkup{
+			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
+				{Text: "да", CallbackData: RegisterConfirmCbYes},
+				{Text: "нет", CallbackData: RegisterConfirmCbNo},
+			}},
+		},
+	}
 
 	return nil
 }
 
-// ConfirmUserRegistration confirms user registration
-func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
-	input := ctx.EffectiveMessage.Text
-	input = strings.ToLower(input)
-
+// ConfirmUserRegistrationYes confirms user registration with Yes value
+func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
 	var (
 		replyMsg            string
 		needEndConversation bool
@@ -539,23 +606,8 @@ func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context
 		nextState = replyInConversation(b, ctx, replyMsg, RegisterConfirm, nil)
 	}()
 
-	if input != "да" && input != "нет" {
-		// Not valid -> try again
-		replyMsg = "Попробуйте еще раз. Напишите: да или нет"
-		return nil
-	}
-
-	if input == "нет" {
-		replyMsg = `
-ОК. Похоже какие-то данные неверны.
-Попробуйте пройти регистрацию снова:
-/register`
-		needEndConversation = true
-		return nil
-	}
-
 	// Use dialog data for creating user
-	const errMsg = "Что-то пошло не так. Напишите еще раз: да или нет"
+	const errMsg = "Что-то пошло не так. Выберите еще раз: да или нет"
 	dbCtx := context.Background()
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
@@ -603,6 +655,20 @@ func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context
 		return nil
 	}
 
+	// Send callback answer
+	cb := ctx.Update.CallbackQuery
+	_, err = cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали: да",
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали: да. Введенные данные верны", nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
+	}
+
 	replyMsg = `
 Вы успешно прошли регистрацию!
 Уже учел ваши параметры для составления диеты.
@@ -610,6 +676,29 @@ func (h *LogicHandlers) ConfirmUserRegistration(b *gotgbot.Bot, ctx *ext.Context
 /getdietfromai`
 	needEndConversation = true
 	return nil
+}
+
+// ConfirmUserRegistrationNo confirms user registration with No value
+func (h *LogicHandlers) ConfirmUserRegistrationNo(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
+	// Send callback answer
+	cb := ctx.Update.CallbackQuery
+	_, err := cb.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text: "Вы выбрали: нет",
+	})
+	if err != nil {
+		log.Printf("cb.Answer: %v", err)
+	}
+
+	_, _, err = cb.Message.EditText(b, "Вы выбрали: нет. Введенные данные неверны", nil)
+	if err != nil {
+		log.Printf("cb.Message.EditText: %v", err)
+	}
+
+	replyMsg := `
+ОК. Данные неверны.
+Попробуйте пройти регистрацию снова:
+/register`
+	return endConversation(b, ctx, replyMsg)
 }
 
 func buildUserFromDialogData(telegramID int64, data *model.ChatBotDialogDataUserRegistration) *model.User {

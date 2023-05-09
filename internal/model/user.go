@@ -61,16 +61,16 @@ type Gender int32
 
 // Gender values
 const (
-	GenderMan   = Gender(1) // Man
-	GenderWoman = Gender(2) // Woman
+	GenderMale   = Gender(1) // Male
+	GenderFemale = Gender(2) // Female
 )
 
 func (g Gender) DescriptionRu() string {
 	switch g {
-	case GenderMan:
-		return "мужской"
-	case GenderWoman:
-		return "женский"
+	case GenderMale:
+		return "мужчина"
+	case GenderFemale:
+		return "женщина"
 	default:
 		log.Print("Gender.DescriptionRu: unknown value")
 		return "невалидное значение"

@@ -11,7 +11,6 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
-	"github.com/google/uuid"
 	"github.com/l-orlov/slim-fairy/internal/model"
 	"github.com/l-orlov/slim-fairy/internal/store"
 	"github.com/l-orlov/slim-fairy/pkg/ctxutil"
@@ -214,7 +213,8 @@ func (h *LogicHandlers) sendDietFromAI(
 	executionCtx := context.Background()
 
 	// Check if user exists
-	user, err := h.storage.GetUserByTelegramID(executionCtx, ctx.EffectiveSender.Id())
+	telegramID := ctx.EffectiveSender.Id()
+	user, err := h.storage.GetUserByTelegramID(executionCtx, telegramID)
 	if err != nil {
 		// User not found
 		if errors.Is(err, store.ErrNotFound) {
@@ -237,7 +237,7 @@ func (h *LogicHandlers) sendDietFromAI(
 		return endConversation(b, ctx, msg)
 	}
 
-	params := &model.GetDietParams{
+	params := model.GetDietParams{
 		Age:                  *user.Age,
 		Weight:               *user.Weight,
 		Height:               *user.Height,
@@ -271,15 +271,26 @@ func (h *LogicHandlers) sendDietFromAI(
 		reqCtx, cancel := context.WithTimeout(ctx, createLogTimeout)
 		defer cancel()
 
+		dialogData := model.ChatBotDialogDataGetDiet{Params: params}
+		dialog := &model.ChatBotDialog{
+			UserTelegramID: telegramID,
+			Kind:           model.ChatBotDialogKindGetDietFromAI,
+			Status:         model.ChatBotDialogStatusCompleted,
+			DataJSON:       dialogData.ToJSON(),
+		}
+		ierr := h.storage.CreateChatBotDialog(reqCtx, dialog)
+		if ierr != nil {
+			log.Printf("h.storage.CreateAIAPILog: %v", ierr)
+		}
+
 		promptLog := &model.AIAPILog{
-			Prompt:   prompt,
-			Response: ptrconv.Ptr(diet),
-			UserID:   user.ID,
-			// TODO: fill
-			SourceID:   uuid.UUID{},
+			Prompt:     prompt,
+			Response:   ptrconv.Ptr(diet),
+			UserID:     user.ID,
+			SourceID:   dialog.ID,
 			SourceType: model.AIAPILogsSourceTypeChatbotDialog,
 		}
-		ierr := h.storage.CreateAIAPILog(reqCtx, promptLog)
+		ierr = h.storage.CreateAIAPILog(reqCtx, promptLog)
 		if ierr != nil {
 			log.Printf("h.storage.CreateAIAPILog: %v", ierr)
 		}
@@ -319,7 +330,7 @@ func (h *LogicHandlers) sendDiet(b *gotgbot.Bot, ctx *ext.Context, diet string) 
 }
 
 // buildPromptForGetDiet builds prompt for getting diet from AI
-func buildPromptForGetDiet(params *model.GetDietParams) string {
+func buildPromptForGetDiet(params model.GetDietParams) string {
 	// Get diet for interval fasting
 	if params.MealsNumberPerDay == 2 {
 		return strings.TrimSpace(fmt.Sprintf(

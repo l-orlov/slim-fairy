@@ -1,8 +1,6 @@
 package model
 
 import (
-	"database/sql"
-	"database/sql/driver"
 	"encoding/json"
 	"log"
 	"time"
@@ -49,20 +47,7 @@ const (
 	ChatBotDialogStatusCompleted  = ChatBotDialogStatus(4) // Completed
 )
 
-type SelfMarshaller interface {
-	Marshal() ([]byte, error)
-}
-
-type SelfUnmarshaller interface {
-	Unmarshal(data []byte) error
-}
-
-// ChatBotDialogData is interface for storing dialog data
-type ChatBotDialogData interface {
-	driver.Valuer
-	sql.Scanner
-}
-
+// ChatBotDialogDataUserRegistration .
 type ChatBotDialogDataUserRegistration struct {
 	Name             *string                `json:"name,omitempty"`
 	Age              *int                   `json:"age,omitempty"`
@@ -93,8 +78,9 @@ func (data *ChatBotDialogDataUserRegistration) IsFilled() bool {
 		data.Height != nil && data.Gender != nil && data.PhysicalActivity != nil
 }
 
-// TODO: fix
+// ChatBotDialogDataGetDiet .
 type ChatBotDialogDataGetDiet struct {
+	Params GetDietParams `json:"params"`
 }
 
 // ToJSON marshals data to JSON string

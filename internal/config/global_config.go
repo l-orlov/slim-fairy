@@ -26,8 +26,7 @@ type (
 		Token string `mapstructure:"TG_BOT_TOKEN"`
 	}
 	AIConfig struct {
-		APIKey   string `mapstructure:"API_KEY"`
-		UseMocks bool   `mapstructure:"AI_USE_MOCKS"`
+		APIKey string `mapstructure:"API_KEY"`
 	}
 )
 

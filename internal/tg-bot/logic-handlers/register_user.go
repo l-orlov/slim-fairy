@@ -55,25 +55,25 @@ const userRegistrationStartInfo = `
 // StartUserRegistration starts user registration
 func (h *LogicHandlers) StartUserRegistration(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
 	var (
-		replyMsg            string
+		msg                 string
 		needEndConversation bool
 	)
 	defer func() {
 		// End if needed
 		if needEndConversation {
-			nextState = endConversation(b, ctx, replyMsg)
+			nextState = endConversation(b, ctx, msg)
 			return
 		}
 
 		// Reply to user
-		nextState = replyInConversation(b, ctx, replyMsg, RegisterName, nil)
+		nextState = replyInConversation(b, ctx, msg, RegisterName, nil)
 	}()
 
 	// Check if user exists
 	user, err := h.storage.GetUserByTelegramID(context.Background(), ctx.EffectiveSender.Id())
 	if err == nil {
 		// TODO: подсказка о том, как обновить данные, если это нужно
-		replyMsg = fmt.Sprintf("%s, вы уже прошли регистрацию", user.Name)
+		msg = fmt.Sprintf("%s, вы уже прошли регистрацию", user.Name)
 		needEndConversation = true
 		return nil
 	}
@@ -81,12 +81,12 @@ func (h *LogicHandlers) StartUserRegistration(b *gotgbot.Bot, ctx *ext.Context) 
 		log.Printf("h.storage.GetUserByTelegramID: %v", err)
 
 		// Error -> try again
-		replyMsg = "Что-то пошло не так. Попробуйте еще раз"
+		msg = "Что-то пошло не так. Попробуйте еще раз"
 		return nil
 	}
 
 	// Success -> go to next state
-	replyMsg = userRegistrationStartInfo
+	msg = userRegistrationStartInfo
 
 	return nil
 }
@@ -101,19 +101,19 @@ func (h *LogicHandlers) RegisterUserName(b *gotgbot.Bot, ctx *ext.Context) (next
 	input := ctx.EffectiveMessage.Text
 
 	var (
-		replyMsg string
-		success  bool
+		msg     string
+		success bool
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterName, RegisterAge, nil)
+		nextState = replyWithStatesInConversation(b, ctx, msg, success, RegisterName, RegisterAge, nil)
 	}()
 
 	// Validate name
 	const validLen = 100
 	if len(input) > validLen {
 		// Not valid -> try again
-		replyMsg = fmt.Sprintf("Слишком длинное имя. Сократите до %d символов", validLen)
+		msg = fmt.Sprintf("Слишком длинное имя. Сократите до %d символов", validLen)
 		return nil
 	}
 
@@ -134,12 +134,12 @@ func (h *LogicHandlers) RegisterUserName(b *gotgbot.Bot, ctx *ext.Context) (next
 		log.Printf("h.storage.CreateChatBotDialog: %v", err)
 
 		// Error -> try again
-		replyMsg = "Что-то пошло не так. Введите имя еще раз"
+		msg = "Что-то пошло не так. Введите имя еще раз"
 		return nil
 	}
 
 	// Success -> go to next state
-	replyMsg = fmt.Sprintf("Рад знакомству, %s!\nСколько вам лет?", name)
+	msg = fmt.Sprintf("Рад знакомству, %s!\nСколько вам лет?", name)
 	success = true
 
 	return nil
@@ -150,23 +150,23 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 	input := ctx.EffectiveMessage.Text
 
 	var (
-		replyMsg string
-		success  bool
+		msg     string
+		success bool
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterAge, RegisterWeight, nil)
+		nextState = replyWithStatesInConversation(b, ctx, msg, success, RegisterAge, RegisterWeight, nil)
 	}()
 
 	ageNumber, err := strconv.Atoi(input)
 	if err != nil {
 		// Not valid -> try again
-		replyMsg = "Нужно число. Попробуйте еще раз"
+		msg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
 	if ageNumber < 0 || ageNumber > 150 {
 		// Not valid -> try again
-		replyMsg = "Число не подходит для возраста. Попробуйте еще раз"
+		msg = "Число не подходит для возраста. Попробуйте еще раз"
 		return nil
 	}
 
@@ -183,7 +183,7 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -193,7 +193,7 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -204,12 +204,12 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 		log.Printf("h.storage.UpdateChatBotDialog: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
 	// Success -> go to next state
-	replyMsg = "Прекрасный возраст.\nКакой у вас вес кг?"
+	msg = "Прекрасный возраст.\nКакой у вас вес кг?"
 	success = true
 
 	return nil
@@ -220,23 +220,23 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	input := ctx.EffectiveMessage.Text
 
 	var (
-		replyMsg string
-		success  bool
+		msg     string
+		success bool
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterWeight, RegisterHeight, nil)
+		nextState = replyWithStatesInConversation(b, ctx, msg, success, RegisterWeight, RegisterHeight, nil)
 	}()
 
 	weight, err := strconv.Atoi(input)
 	if err != nil {
 		// Not valid -> try again
-		replyMsg = "Нужно число. Попробуйте еще раз"
+		msg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
 	if weight < 0 || weight > 300 {
 		// Not valid -> try again
-		replyMsg = "Число не подходит для веса. Попробуйте еще раз"
+		msg = "Число не подходит для веса. Попробуйте еще раз"
 		return nil
 	}
 
@@ -253,7 +253,7 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -263,7 +263,7 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -274,12 +274,12 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		log.Printf("h.storage.UpdateChatBotDialog: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
 	// Success -> go to next state
-	replyMsg = "Хорошо.\nКакой у вас рост см?"
+	msg = "Хорошо.\nКакой у вас рост см?"
 	success = true
 
 	return nil
@@ -290,24 +290,24 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	input := ctx.EffectiveMessage.Text
 
 	var (
-		replyMsg string
-		success  bool
-		opts     *gotgbot.SendMessageOpts
+		msg     string
+		success bool
+		opts    *gotgbot.SendMessageOpts
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterHeight, RegisterGender, opts)
+		nextState = replyWithStatesInConversation(b, ctx, msg, success, RegisterHeight, RegisterGender, opts)
 	}()
 
 	height, err := strconv.Atoi(input)
 	if err != nil {
 		// Not valid -> try again
-		replyMsg = "Нужно число. Попробуйте еще раз"
+		msg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
 	if height < 0 || height > 250 {
 		// Not valid -> try again
-		replyMsg = "Число не подходит для роста. Попробуйте еще раз"
+		msg = "Число не подходит для роста. Попробуйте еще раз"
 		return nil
 	}
 
@@ -324,7 +324,7 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -334,7 +334,7 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -345,12 +345,12 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		log.Printf("h.storage.UpdateChatBotDialog: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
 	// Success -> go to next state
-	replyMsg = "ОК.\nВаш пол? Выберите ниже"
+	msg = "ОК.\nВаш пол? Выберите ниже"
 	success = true
 	opts = &gotgbot.SendMessageOpts{
 		ParseMode: "html",
@@ -380,13 +380,13 @@ func (h *LogicHandlers) registerUserGender(
 	b *gotgbot.Bot, ctx *ext.Context, gender model.Gender,
 ) (nextState error) {
 	var (
-		replyMsg string
-		success  bool
-		opts     *gotgbot.SendMessageOpts
+		msg     string
+		success bool
+		opts    *gotgbot.SendMessageOpts
 	)
 	defer func() {
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterGender, RegisterPhysicalActivity, opts)
+		nextState = replyWithStatesInConversation(b, ctx, msg, success, RegisterGender, RegisterPhysicalActivity, opts)
 	}()
 
 	// Update dialog data
@@ -402,7 +402,7 @@ func (h *LogicHandlers) registerUserGender(
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -412,7 +412,7 @@ func (h *LogicHandlers) registerUserGender(
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -423,7 +423,7 @@ func (h *LogicHandlers) registerUserGender(
 		log.Printf("h.storage.UpdateChatBotDialog: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -443,7 +443,7 @@ func (h *LogicHandlers) registerUserGender(
 	}
 
 	// Success -> go to next state
-	replyMsg = "Принято.\nВаш уровень физической активности? Выберите ниже"
+	msg = "Принято.\nВаш уровень физической активности? Выберите ниже"
 	success = true
 	opts = &gotgbot.SendMessageOpts{
 		ParseMode: "html",
@@ -479,7 +479,7 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 	b *gotgbot.Bot, ctx *ext.Context, activityLevel model.PhysicalActivityLevel,
 ) (nextState error) {
 	var (
-		replyMsg            string
+		msg                 string
 		success             bool
 		needEndConversation bool
 		opts                *gotgbot.SendMessageOpts
@@ -487,12 +487,12 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 	defer func() {
 		// End if needed
 		if needEndConversation {
-			nextState = endConversation(b, ctx, replyMsg)
+			nextState = endConversation(b, ctx, msg)
 			return
 		}
 
 		// Reply to user
-		nextState = replyWithStatesInConversation(b, ctx, replyMsg, success, RegisterPhysicalActivity, RegisterConfirm, opts)
+		nextState = replyWithStatesInConversation(b, ctx, msg, success, RegisterPhysicalActivity, RegisterConfirm, opts)
 	}()
 
 	// Update dialog data
@@ -508,7 +508,7 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -518,7 +518,7 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -529,7 +529,7 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 		log.Printf("h.storage.UpdateChatBotDialog: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -553,7 +553,7 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 		log.Print("h.RegisterUserPhysicalActivity: not all data is filled")
 
 		// Error -> try again
-		replyMsg = `
+		msg = `
 Не все данные заполнены. Попробуйте пройти регистрацию снова:
 /register`
 		needEndConversation = true
@@ -561,7 +561,7 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 	}
 
 	// Success -> go to next state
-	replyMsg = fmt.Sprintf(`
+	msg = fmt.Sprintf(`
 Принято.
 
 Имя: %s
@@ -592,18 +592,18 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 // ConfirmUserRegistrationYes confirms user registration with Yes value
 func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
 	var (
-		replyMsg            string
+		msg                 string
 		needEndConversation bool
 	)
 	defer func() {
 		// End if needed
 		if needEndConversation {
-			nextState = endConversation(b, ctx, replyMsg)
+			nextState = endConversation(b, ctx, msg)
 			return
 		}
 
 		// Reply to user
-		nextState = replyInConversation(b, ctx, replyMsg, RegisterConfirm, nil)
+		nextState = replyInConversation(b, ctx, msg, RegisterConfirm, nil)
 	}()
 
 	// Use dialog data for creating user
@@ -619,7 +619,7 @@ func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Cont
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -629,7 +629,7 @@ func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Cont
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -651,7 +651,7 @@ func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Cont
 		log.Printf("h.storage.WithTransaction: %v", err)
 
 		// Error -> try again
-		replyMsg = errMsg
+		msg = errMsg
 		return nil
 	}
 
@@ -669,7 +669,7 @@ func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Cont
 		log.Printf("cb.Message.EditText: %v", err)
 	}
 
-	replyMsg = `
+	msg = `
 Вы успешно прошли регистрацию!
 Уже учел ваши параметры для составления диеты.
 Получить диету от ИИ:
@@ -694,11 +694,11 @@ func (h *LogicHandlers) ConfirmUserRegistrationNo(b *gotgbot.Bot, ctx *ext.Conte
 		log.Printf("cb.Message.EditText: %v", err)
 	}
 
-	replyMsg := `
+	msg := `
 ОК. Данные неверны.
 Попробуйте пройти регистрацию снова:
 /register`
-	return endConversation(b, ctx, replyMsg)
+	return endConversation(b, ctx, msg)
 }
 
 func buildUserFromDialogData(telegramID int64, data *model.ChatBotDialogDataUserRegistration) *model.User {

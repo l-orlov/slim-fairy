@@ -5,31 +5,43 @@ LOCAL_DB_PASSWORD:=slim_fairy_password
 LOCAL_DB_PORT:=54320
 LOCAL_DB_DSN:=host=$(LOCAL_DB_HOST) port=$(LOCAL_DB_PORT) dbname=$(LOCAL_DB_NAME) user=$(LOCAL_DB_USER) password=$(LOCAL_DB_PASSWORD) sslmode=disable
 
-# set up locally with docker
-docker-up-local-with-build:
+# release with docker gracefully
+docker-release:
+	docker build .
+	make db-run-migrations
+	make docker-up
+
+db-run-migrations:
+	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up
+
+docker-up:
+	docker-compose --env-file ./configs/docker_local.env up -d
+
+docker-down:
+	docker-compose --env-file ./configs/docker_local.env down
+
+# first local set up with docker
+docker-first-set-up-with-build:
 	docker-compose --env-file ./configs/docker_local.env up -d --build
 	# sleep before run migrations to wait db creation
 	sleep 1
-	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up
+	make db-run-migrations
 
-docker-up-local:
+docker-first-set-up:
 	docker-compose --env-file ./configs/docker_local.env up -d
 	# sleep before run migrations to wait db creation
 	sleep 1
-	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up
-
-docker-down-local:
-	docker-compose --env-file ./configs/docker_local.env down
+	make db-run-migrations
 
 docker-reset-local:
-	make docker-down-local
-	make docker-up-local
+	make docker-down
+	make docker-up
 
 db-create-migration:
 	goose -dir db/migrations create name sql
 
 db-migrate:
-	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up
+	make db-run-migrations
 	make db-gen-structure
 
 db-migrate-down:
@@ -43,7 +55,7 @@ db-gen-structure:
 db-reset:
 	psql -c "drop database if exists $(LOCAL_DB_NAME)"
 	psql -c "create database $(LOCAL_DB_NAME)"
-	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up
+	make db-run-migrations
 	make db-gen-structure
 
 # generate project code

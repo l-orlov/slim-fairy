@@ -18,42 +18,57 @@ var (
 
 func replyWithStatesInConversation(
 	b *gotgbot.Bot, ctx *ext.Context,
-	replyMsg string, success bool,
+	msg string, success bool,
 	failureStateName, successStateName string,
 	opts *gotgbot.SendMessageOpts,
 ) (nextState error) {
 	// If not success -> try again
 	if !success {
-		return replyInConversation(b, ctx, replyMsg, failureStateName, opts)
+		return replyInConversation(b, ctx, msg, failureStateName, opts)
 	}
 
 	// If success -> go to next state
-	return replyInConversation(b, ctx, replyMsg, successStateName, opts)
+	return replyInConversation(b, ctx, msg, successStateName, opts)
 }
 
 func replyInConversation(
 	b *gotgbot.Bot, ctx *ext.Context,
-	replyMsg string, nextStateName string,
+	msg string, nextStateName string,
 	opts *gotgbot.SendMessageOpts,
 ) (nextState error) {
-	reply(b, ctx, replyMsg, opts)
+	reply(b, ctx, msg, opts)
 	return handlers.NextConversationState(nextStateName)
 }
 
-func endConversation(b *gotgbot.Bot, ctx *ext.Context, replyMsg string) (nextState error) {
-	reply(b, ctx, replyMsg, nil)
+func endConversation(b *gotgbot.Bot, ctx *ext.Context, msg string) (nextState error) {
+	reply(b, ctx, msg, nil)
 	return handlers.EndConversation()
 }
 
-func reply(b *gotgbot.Bot, ctx *ext.Context, replyMsg string, opts *gotgbot.SendMessageOpts) {
+func reply(b *gotgbot.Bot, ctx *ext.Context, msg string, opts *gotgbot.SendMessageOpts) {
 	sendOpts := defaultSendMessageOpts
 	if opts != nil {
 		sendOpts = opts
 	}
 
-	_, err := ctx.EffectiveMessage.Reply(b, replyMsg, sendOpts)
+	_, err := ctx.EffectiveMessage.Reply(b, msg, sendOpts)
 	if err != nil {
 		log.Printf("ctx.EffectiveMessage.Reply: %v", err)
+
+		// Fallback with usual sending msg
+		sendMessage(b, ctx, msg, opts)
+	}
+}
+
+func sendMessage(b *gotgbot.Bot, ctx *ext.Context, msg string, opts *gotgbot.SendMessageOpts) {
+	sendOpts := defaultSendMessageOpts
+	if opts != nil {
+		sendOpts = opts
+	}
+
+	_, err := b.SendMessage(ctx.EffectiveChat.Id, msg, sendOpts)
+	if err != nil {
+		log.Printf("b.SendMessage: %v", err)
 	}
 }
 

@@ -18,6 +18,8 @@ import (
 
 /* TODO:
 - добавить цепочку обновления данных
+
+// проблема на телефоне мамы: ctx.EffectiveMessage.Reply: unable to sendMessage: Bad Request: replied message not found
 */
 
 type (

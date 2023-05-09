@@ -19,8 +19,8 @@ const startMsgTemplate = `
 
 // Start introduces the bot.
 func (h *LogicHandlers) Start(b *gotgbot.Bot, ctx *ext.Context) error {
-	replyMsg := fmt.Sprintf(startMsgTemplate, b.User.Username)
-	reply(b, ctx, replyMsg, nil)
+	msg := fmt.Sprintf(startMsgTemplate, b.User.Username)
+	reply(b, ctx, msg, nil)
 
 	return nil
 }

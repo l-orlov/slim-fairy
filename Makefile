@@ -9,13 +9,16 @@ LOCAL_DB_DSN:=host=$(LOCAL_DB_HOST) port=$(LOCAL_DB_PORT) dbname=$(LOCAL_DB_NAME
 docker-release:
 	docker build .
 	make db-run-migrations
-	make docker-up
+	make docker-up-with-build
 
 db-run-migrations:
 	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up
 
 docker-up:
 	docker-compose --env-file ./configs/docker_local.env up -d
+
+docker-up-with-build:
+	docker-compose --env-file ./configs/docker_local.env up -d --build
 
 docker-down:
 	docker-compose --env-file ./configs/docker_local.env down

@@ -18,6 +18,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+/*
+TODO: потестить и добавить:
+Составь диету на неделю с тремя приемами пищи в день и без перекусов.
+Укажи список ингредиентов, их количество, калорийность и КБЖУ в конце.
+
+или нужно: калорийность и БЖУ в конце
+*/
+
 // Handler states for getting diet from AI
 const (
 	GetDietFromAISelectMeals  = "select_meals"

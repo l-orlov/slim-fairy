@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  postgres:
+    container_name: slim-fairy-postgres
+    image: postgres:14.6
+    ports:
+      - "54320:5432"
+    environment:
+      PGDATA: /var/lib/postgresql/data/
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - slim-fairy-postgres:/var/lib/postgresql/data
+    networks:
+      - slim-fairy
+
+  #  web-service:
+  #    container_name: slim-fairy-service
+  #    build: .
+  #    depends_on:
+  #      - postgres
+  #    command: ./service
+  #    ports:
+  #      - "8080:8080"
+
+  tg-bot:
+    container_name: slim-fairy-tg-bot
+    build: ..
+    depends_on:
+      - postgres
+    command: ./tg-bot
+    networks:
+      - slim-fairy
+
+volumes:
+  slim-fairy-postgres:
+    driver: local
+
+networks:
+  slim-fairy:
+    external: true
+    name: slim-fairy

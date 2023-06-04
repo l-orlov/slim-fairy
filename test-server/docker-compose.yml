@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  test-server:
+    container_name: test-server
+    build: .
+    command: ./test-server
+    ports:
+      - "8081:8080"

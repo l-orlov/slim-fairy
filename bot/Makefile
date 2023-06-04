@@ -20,6 +20,9 @@ docker-up:
 docker-up-with-build:
 	docker-compose --env-file ./configs/docker_local.env up -d --build
 
+docker-logs:
+	docker-compose logs -f
+
 docker-down:
 	docker-compose --env-file ./configs/docker_local.env down
 

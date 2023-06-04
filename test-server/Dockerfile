@@ -1,54 +1,33 @@
-############################
-# STEP 1 build executable binary
-############################
-FROM golang:alpine as builder
+# Use the offical golang image to create a binary.
+# This is based on Debian and sets the GOPATH to /go.
+# https://hub.docker.com/_/golang
+FROM golang:1.20-buster as builder
 
-# Install git + SSL ca certificates.
-# Git is required for fetching the dependencies.
-# Ca-certificates is required to call HTTPS endpoints.
-RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-certificates
+# Create and change to the app directory.
+WORKDIR /app
 
-# Create appuser
-ENV USER=appuser
-ENV UID=10001
-# See https://stackoverflow.com/a/55757473/12429735RUN
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    "${USER}"
-
-COPY .. /builder/
-WORKDIR /builder/
-
-# Fetch dependencies.
+# Retrieve application dependencies.
+# This allows the container build to reuse cached dependencies.
+# Expecting to copy go.mod and if present go.sum.
+COPY go.* ./
 RUN go mod download
-RUN go mod verify
 
-# Build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ./.bin/test-server ./cmd/main.go
+# Copy local code to the container image.
+COPY . ./
 
-############################
-# STEP 2 build a small image
-############################
-FROM scratch
-# To debug container use alpine image instead scratch.
+# Build the binary.
+RUN go build -v -o server ./cmd/main.go
 
-# Import from builder.
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /etc/passwd /etc/passwd
-COPY --from=builder /etc/group /etc/group
+# Use the official Debian slim image for a lean production container.
+# https://hub.docker.com/_/debian
+# https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
+FROM debian:buster-slim
+RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app/
+# Copy the binary to the production image from the builder stage.
+COPY --from=builder /app/server /app/server
 
-# Copy our static executable and needed files.
-COPY --from=builder /builder/.bin/test-server .
-
-# Use an unprivileged user.
-USER appuser:appuser
-
-# Run the binary.
-CMD ["./test-server"]
+# Run the web service on container startup.
+CMD ["/app/server"]

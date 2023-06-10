@@ -2,6 +2,9 @@ version: '3'
 
 services:
 
+# run this for external network:
+# docker network create traefiknet
+
   traefik:
     image: traefik:v2.2
     restart: always
@@ -20,11 +23,9 @@ services:
       - --certificatesresolvers.le.acme.email=lev.orlov.dev@gmail.com
       - --certificatesresolvers.le.acme.storage=acme.json
       - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /traefik/acme.json:/acme.json:rw
-
     labels:
       - traefik.enable = true
       - traefik.http.middlewares.traefik_https.redirectscheme.scheme = https
@@ -35,3 +36,5 @@ services:
       - traefik.http.routers.traefik_https.rule = Host(`traefik.lorlovdev.ru`)
       - traefik.http.routers.traefik_https.tls = true
       - traefik.http.routers.traefik_https.tls.certresolver=le
+    networks:
+      - traefiknet

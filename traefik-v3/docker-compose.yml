@@ -1,12 +1,17 @@
-version: '3'
+version: '3.7'
 
 services:
 
-# run this for external network:
+# run this to create external network:
 # docker network create traefiknet
 
+# run container:
+# touch acme.json
+# chmod 600 acme.json
+# docker-compose up -d traefik
+
   traefik:
-    image: traefik:v2.2
+    image: traefik:v2.8
     restart: always
     container_name: "traefik"
     command:
@@ -38,3 +43,8 @@ services:
       - traefik.http.routers.traefik_https.tls.certresolver=le
     networks:
       - traefiknet
+
+networks:
+  traefiknet:
+    external: true
+    name: traefiknet

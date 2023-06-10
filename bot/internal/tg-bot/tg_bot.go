@@ -26,10 +26,6 @@ import (
 скажем, что этот функционал в проработке и разработке.
 
 добавить вопросы при регистрации.
-
-убрать reply, а просто обычные сообщения отправлять
-
-удалить бд, чтобы можно было заново регу пройти.
 */
 
 type (
@@ -103,7 +99,7 @@ func New(
 
 	// command to get diet menu from AI
 	dispatcher.AddHandler(handlers.NewConversation(
-		[]ext.Handler{handlers.NewCommand("getdietfromai", logicHandlers.StartGettingDiet)},
+		[]ext.Handler{handlers.NewCommand("getdietfromai", logicHandlers.StartGettingDietFromAI)},
 		map[string][]ext.Handler{
 			logic_handlers.GetDietFromAISelectMeals: {
 				handlers.NewCallback(callbackquery.Equal(logic_handlers.GetDietFromAICbSelectMeals2), logicHandlers.SelectMeals2),
@@ -120,6 +116,9 @@ func New(
 			StateStorage: conversation.NewInMemoryStorage(conversation.KeyStrategySenderAndChat),
 		},
 	))
+
+	// command to get diet menu from nutritionist
+	dispatcher.AddHandler(handlers.NewCommand("getdiet", logicHandlers.StartGettingDiet))
 
 	return &Bot{
 		bot:     b,

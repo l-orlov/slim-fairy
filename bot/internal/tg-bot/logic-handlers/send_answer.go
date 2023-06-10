@@ -36,28 +36,13 @@ func replyInConversation(
 	msg string, nextStateName string,
 	opts *gotgbot.SendMessageOpts,
 ) (nextState error) {
-	reply(b, ctx, msg, opts)
+	sendMessage(b, ctx, msg, opts)
 	return handlers.NextConversationState(nextStateName)
 }
 
 func endConversation(b *gotgbot.Bot, ctx *ext.Context, msg string) (nextState error) {
-	reply(b, ctx, msg, nil)
+	sendMessage(b, ctx, msg, nil)
 	return handlers.EndConversation()
-}
-
-func reply(b *gotgbot.Bot, ctx *ext.Context, msg string, opts *gotgbot.SendMessageOpts) {
-	sendOpts := defaultSendMessageOpts
-	if opts != nil {
-		sendOpts = opts
-	}
-
-	_, err := ctx.EffectiveMessage.Reply(b, msg, sendOpts)
-	if err != nil {
-		log.Printf("ctx.EffectiveMessage.Reply: %v", err)
-
-		// Fallback with usual sending msg
-		sendMessage(b, ctx, msg, opts)
-	}
 }
 
 func sendMessage(b *gotgbot.Bot, ctx *ext.Context, msg string, opts *gotgbot.SendMessageOpts) {

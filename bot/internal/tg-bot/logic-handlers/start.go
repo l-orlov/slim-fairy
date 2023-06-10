@@ -20,7 +20,7 @@ const startMsgTemplate = `
 // Start introduces the bot.
 func (h *LogicHandlers) Start(b *gotgbot.Bot, ctx *ext.Context) error {
 	msg := fmt.Sprintf(startMsgTemplate, b.User.Username)
-	reply(b, ctx, msg, nil)
+	sendMessage(b, ctx, msg, nil)
 
 	return nil
 }

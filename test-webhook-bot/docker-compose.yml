@@ -5,8 +5,8 @@ services:
     container_name: test-webhook-bot
     build: .
     command: /app/server
-    ports:
-      - "8081"
+#    ports:
+#      - "8081"
     environment:
       TOKEN: ${TOKEN}
       WEBHOOK_DOMAIN: ${WEBHOOK_DOMAIN}
@@ -16,7 +16,6 @@ services:
       - "traefik.http.routers.test-webhook-bot.rule=Host(`${WEBHOOK_DOMAIN}`)"
       - "traefik.http.routers.test-webhook-bot.entrypoints=websecure"
       - "traefik.http.routers.test-webhook-bot.tls.certresolver=myresolver"
-#      - "traefik.http.services.test-webhook-bot.loadbalancer.server.port=8081"
     networks:
       - traefiknet
 

@@ -70,8 +70,8 @@ func main() {
 	// Start the webhook server. We start the server before we set the webhook itself, so that when telegram starts
 	// sending updates, the server is already ready.
 	webhookOpts := ext.WebhookOpts{
-		ListenAddr:  "0.0.0.0:8081", // This example assumes you're in a dev environment running ngrok on 8081.
-		SecretToken: webhookSecret,  // Setting a webhook secret here allows you to ensure the webhook is set by you (must be set here AND in SetWebhook!).
+		ListenAddr:  ":8081",       // This example assumes you're in a dev environment running ngrok on 8081.
+		SecretToken: webhookSecret, // Setting a webhook secret here allows you to ensure the webhook is set by you (must be set here AND in SetWebhook!).
 	}
 	// We use the token as the urlPath for the webhook, as using a secret ensures that strangers aren't crafting fake updates.
 	err = updater.StartWebhook(b, token, webhookOpts)

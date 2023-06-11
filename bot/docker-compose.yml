@@ -25,16 +25,16 @@ services:
   #    build: .
   #    depends_on:
   #      - postgres
-  #    command: ./service
-  #    ports:
-  #      - "8080:8080"
+  #    command: /app/server
+  #    expose:
+  #      - "8080"
 
   tg-bot:
     container_name: slim-fairy-tg-bot
     build: .
     depends_on:
       - postgres
-    command: ./tg-bot
+    command: /app/tg-bot
     expose:
       - "8080"
     labels:

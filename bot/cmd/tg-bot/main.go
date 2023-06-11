@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/l-orlov/slim-fairy/bot/internal/ai-api-client"
 	"github.com/l-orlov/slim-fairy/bot/internal/config"
@@ -32,14 +35,21 @@ func main() {
 	aiClient := ai_api_client.New(cfg.APIKey)
 
 	// Create bot
-	bot, err := tg_bot.New(cfg.Token, aiClient, storage)
+	bot, err := tg_bot.New(aiClient, storage)
 	if err != nil {
 		log.Fatalf("tg_bot.New: %v", err)
 	}
 
 	// Run bot
-	bot.Run()
+	go bot.Run()
 
-	// TODO: graceful shut down
-	_ = ctx
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+	<-quit
+
+	log.Printf("service shutting down")
+	if err = bot.Stop(); err != nil {
+		log.Printf("failed to stop bot: %v", err)
+	}
 }

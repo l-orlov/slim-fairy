@@ -11,6 +11,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/conversation"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/callbackquery"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/message"
+	"github.com/l-orlov/slim-fairy/bot/internal/config"
 	"github.com/l-orlov/slim-fairy/bot/internal/store"
 	"github.com/l-orlov/slim-fairy/bot/internal/tg-bot/logic-handlers"
 	"github.com/pkg/errors"
@@ -20,10 +21,6 @@ import (
 делаем идеально функционал с чат гпт.
 запрос меню на один день.
 должно все хорошо отрабатывать и отдаваться ссылка на сбермаркет.
-
-делаем кнопку: получить диету от диетолога
-идет живое общение с диетологом.
-скажем, что этот функционал в проработке и разработке.
 
 добавить вопросы при регистрации.
 */
@@ -36,11 +33,12 @@ type (
 )
 
 func New(
-	token string,
 	aiClient logic_handlers.AIClient,
 	storage *store.Storage,
 ) (*Bot, error) {
-	b, err := gotgbot.NewBot(token, &gotgbot.BotOpts{
+	cfg := config.Get()
+
+	b, err := gotgbot.NewBot(cfg.Token, &gotgbot.BotOpts{
 		Client: http.Client{},
 		DefaultRequestOpts: &gotgbot.RequestOpts{
 			Timeout: gotgbot.DefaultTimeout,
@@ -127,6 +125,45 @@ func New(
 }
 
 func (b *Bot) Run() {
+	cfg := config.Get()
+	if len(cfg.WebhookDomain) != 0 && len(cfg.WebhookSecret) != 0 && len(cfg.WebhookAddress) != 0 {
+		b.startWebhook()
+	}
+
+	b.startPolling()
+}
+
+func (b *Bot) startWebhook() {
+	cfg := config.Get()
+
+	// Start the webhook server. We start the server before we set the webhook itself, so that when telegram starts
+	// sending updates, the server is already ready.
+	webhookOpts := ext.WebhookOpts{
+		ListenAddr:  cfg.WebhookAddress,
+		SecretToken: cfg.WebhookSecret, // Setting a webhook secret here allows you to ensure the webhook is set by you (must be set here AND in SetWebhook!).
+	}
+	// We use the token as the urlPath for the webhook, as using a secret ensures that strangers aren't crafting fake updates.
+	err := b.updater.StartWebhook(b.bot, cfg.Token, webhookOpts)
+	if err != nil {
+		panic("failed to start webhook: " + err.Error())
+	}
+
+	err = b.updater.SetAllBotWebhooks(cfg.WebhookDomain, &gotgbot.SetWebhookOpts{
+		MaxConnections:     100,
+		DropPendingUpdates: true,
+		SecretToken:        webhookOpts.SecretToken,
+	})
+	if err != nil {
+		panic("failed to set webhook: " + err.Error())
+	}
+
+	log.Printf("%s has been started with webhook...\n", b.bot.User.Username)
+
+	// Idle, to keep updates coming in, and avoid bot stopping.
+	b.updater.Idle()
+}
+
+func (b *Bot) startPolling() {
 	// Start receiving updates.
 	err := b.updater.StartPolling(b.bot, &ext.PollingOpts{
 		DropPendingUpdates: true,
@@ -140,10 +177,15 @@ func (b *Bot) Run() {
 	if err != nil {
 		panic("failed to start polling: " + err.Error())
 	}
-	log.Printf("%s has been started...\n", b.bot.User.Username)
+
+	log.Printf("%s has been started with polling...\n", b.bot.User.Username)
 
 	// Idle, to keep updates coming in, and avoid bot stopping.
 	b.updater.Idle()
+}
+
+func (b *Bot) Stop() error {
+	return b.updater.Stop()
 }
 
 // Create a matcher which only matches text which is not a command

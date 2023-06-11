@@ -7,8 +7,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// TODO: use private config without write access
-
 type (
 	Config struct {
 		PgDSN         string `mapstructure:"PG_DSN"`
@@ -23,7 +21,12 @@ type (
 		Secret   string        `mapstructure:"TOKEN_SECRET"`
 	}
 	TelegramBot struct {
+		// Token from Telegram
 		Token string `mapstructure:"TG_BOT_TOKEN"`
+		// Settings for webhook. If empty use polling
+		WebhookDomain  string `mapstructure:"TG_BOT_WEBHOOK_DOMAIN"`
+		WebhookSecret  string `mapstructure:"TG_BOT_WEBHOOK_SECRET"`
+		WebhookAddress string `mapstructure:"TG_BOT_WEBHOOK_ADDRESS"`
 	}
 	AIConfig struct {
 		APIKey string `mapstructure:"API_KEY"`

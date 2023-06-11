@@ -1,6 +1,10 @@
 version: "3.8"
 
 services:
+
+  # run this to create external network:
+  # docker network create traefiknet
+
   postgres:
     container_name: slim-fairy-postgres
     image: postgres:14.6
@@ -27,17 +31,17 @@ services:
 
   tg-bot:
     container_name: slim-fairy-tg-bot
-    build: ..
+    build: .
     depends_on:
       - postgres
     command: ./tg-bot
-    ports:
+    expose:
       - "8080"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`tg-bot.lorlovdev.ru`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+      - "traefik.http.routers.tg-bot.rule=Host(`${TG_BOT_WEBHOOK_DOMAIN}`)"
+      - "traefik.http.routers.tg-bot.entrypoints=websecure"
+      - "traefik.http.routers.tg-bot.tls.certresolver=myresolver"
     networks:
       - traefiknet
 

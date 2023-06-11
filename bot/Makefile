@@ -15,26 +15,26 @@ db-run-migrations:
 	goose -dir db/migrations postgres "$(LOCAL_DB_DSN)" up
 
 docker-up:
-	docker-compose --env-file ./configs/docker_local.env up -d
+	docker-compose --env-file ./configs/docker.env up -d
 
 docker-up-with-build:
-	docker-compose --env-file ./configs/docker_local.env up -d --build
+	docker-compose --env-file ./configs/docker.env up -d --build
 
 docker-logs:
 	docker-compose logs -f
 
 docker-down:
-	docker-compose --env-file ./configs/docker_local.env down
+	docker-compose --env-file ./configs/docker.env down
 
 # first local set up with docker
 docker-first-set-up-with-build:
-	docker-compose --env-file ./configs/docker_local.env up -d --build
+	docker-compose --env-file ./configs/docker.env up -d --build
 	# sleep before run migrations to wait db creation
 	sleep 1
 	make db-run-migrations
 
 docker-first-set-up:
-	docker-compose --env-file ./configs/docker_local.env up -d
+	docker-compose --env-file ./configs/docker.env up -d
 	# sleep before run migrations to wait db creation
 	sleep 1
 	make db-run-migrations

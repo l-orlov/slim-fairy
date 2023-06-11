@@ -15,6 +15,7 @@ const startMsgTemplate = `
 /start - Начать диалог
 /register - Пройти регистрацию
 /getdietfromai - Получить диету от ИИ
+/getdiet - Получить диету от диетолога
 /cancel - Прервать любое начатое действие`
 
 // Start introduces the bot.

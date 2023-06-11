@@ -2,20 +2,20 @@ version: '3.7'
 
 services:
 
-# docs: https://tx0.ru/ru/notes/docker-compose/traefik-docker-compose-ssl-let-s-encrypt
+  # docs: https://tx0.ru/ru/notes/docker-compose/traefik-docker-compose-ssl-let-s-encrypt
 
-# run this to create external network:
-# docker network create traefiknet
+  # run this to create external network:
+  # docker network create traefiknet
 
-# run container:
-# touch acme.json
-# chmod 600 acme.json
-# docker-compose up -d traefik
+  # run container:
+  # touch acme.json
+  # chmod 600 acme.json
+  # docker-compose up -d traefik
 
-# show logs:
-# docker-compose logs -f
+  # show logs:
+  # docker-compose logs -f
 
-# have 50 attempts with Let's Encrypt
+  # have 50 attempts with Let's Encrypt
 
   traefik:
     image: traefik:v2.10
@@ -27,7 +27,6 @@ services:
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --providers.file.directory=/etc/traefik/dynamic_conf
       - --accesslog=true
       - --certificatesresolvers.le.acme.email=lev.orlov.dev@gmail.com
       - --certificatesresolvers.le.acme.storage=acme.json
@@ -36,14 +35,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${PWD}/acme.json:/acme.json:rw
     labels:
-      - traefik.enable = true
-      - traefik.http.middlewares.traefik_https.redirectscheme.scheme = https
-      - traefik.http.routers.traefik.entrypoints = web
-      - traefik.http.routers.traefik.middlewares = traefik_https@docker
-      - traefik.http.routers.traefik.rule = Host(`traefik.lorlovdev.ru`)
-      - traefik.http.routers.traefik_https.entrypoints = websecure
-      - traefik.http.routers.traefik_https.rule = Host(`traefik.lorlovdev.ru`)
-      - traefik.http.routers.traefik_https.tls = true
+      - traefik.enable=true
+      - traefik.http.middlewares.traefik_https.redirectscheme.scheme=https
+      - traefik.http.routers.traefik.entrypoints=web
+      - traefik.http.routers.traefik.middlewares=traefik_https@docker
+      - traefik.http.routers.traefik.rule=Host(`traefik.lorlovdev.ru`)
+      - traefik.http.routers.traefik_https.entrypoints=websecure
+      - traefik.http.routers.traefik_https.rule=Host(`traefik.lorlovdev.ru`)
+      - traefik.http.routers.traefik_https.tls=true
       - traefik.http.routers.traefik_https.tls.certresolver=le
     networks:
       - traefiknet

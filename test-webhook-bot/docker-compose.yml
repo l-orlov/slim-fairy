@@ -13,9 +13,9 @@ services:
       WEBHOOK_SECRET: ${WEBHOOK_SECRET}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`${WEBHOOK_DOMAIN}`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+      - "traefik.http.routers.test-webhook-bot.rule=Host(`${WEBHOOK_DOMAIN}`)"
+      - "traefik.http.routers.test-webhook-bot.entrypoints=websecure"
+      - "traefik.http.routers.test-webhook-bot.tls.certresolver=myresolver"
     networks:
       - traefiknet
 

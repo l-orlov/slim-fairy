@@ -5,8 +5,8 @@ services:
     container_name: test-webhook-bot
     build: .
     command: /app/server
-#    ports:
-#      - "8081"
+    ports:
+      - "8081"
     environment:
       TOKEN: ${TOKEN}
       WEBHOOK_DOMAIN: ${WEBHOOK_DOMAIN}

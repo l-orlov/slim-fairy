@@ -7,8 +7,6 @@ services:
     command: /app/server
     ports:
       - "8081"
-    expose:
-      - "8081"
     environment:
       TOKEN: ${TOKEN}
       WEBHOOK_DOMAIN: ${WEBHOOK_DOMAIN}

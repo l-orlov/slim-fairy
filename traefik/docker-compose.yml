@@ -2,15 +2,11 @@ version: '3.7'
 
 services:
 
-  # docs: https://tx0.ru/ru/notes/docker-compose/traefik-docker-compose-ssl-let-s-encrypt
-
   # run this to create external network:
   # docker network create traefiknet
 
   # run container:
-  # touch acme.json
-  # chmod 600 acme.json
-  # docker-compose up -d traefik
+  # docker-compose up -d
 
   # show logs:
   # docker-compose logs -f
@@ -18,35 +14,59 @@ services:
   # stop container:
   # docker-compose down
 
-  # have 50 attempts with Let's Encrypt
-
   traefik:
-    image: traefik:v2.10
-    restart: always
+    image: "traefik:v2.10"
     container_name: "traefik"
     command:
-      - --api.insecure=true
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --accesslog=true
-      - --certificatesresolvers.le.acme.email=lev.orlov.dev@gmail.com
-      - --certificatesresolvers.le.acme.storage=acme.json
-      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      # FOR DEBUG
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      # FOR DEBUG
+      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=lev.orlov.dev@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${PWD}/acme.json:/acme.json:rw
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.traefik_https.redirectscheme.scheme=https
-      - traefik.http.routers.traefik.entrypoints=web
-      - traefik.http.routers.traefik.middlewares=traefik_https@docker
-      - traefik.http.routers.traefik.rule=Host(`traefik.lorlovdev.ru`)
-      - traefik.http.routers.traefik_https.entrypoints=websecure
-      - traefik.http.routers.traefik_https.rule=Host(`traefik.lorlovdev.ru`)
-      - traefik.http.routers.traefik_https.tls=true
-      - traefik.http.routers.traefik_https.tls.certresolver=le
+      - "traefik.enable=true"
+      # FOR HTTP
+      - "traefik.http.routers.traefik-http.entrypoints=web"
+      - "traefik.http.routers.traefik-http.rule=Host(`traefik.lorlovdev.ru`)"
+      # REDIRECT HTTP TO HTTPS
+      - "traefik.http.routers.traefik-http.middlewares=traefik-https"
+      - "traefik.http.middlewares.traefik-https.redirectscheme.scheme=https"
+      # FOR HTTPS
+      - "traefik.http.routers.traefik.rule=Host(`traefik.lorlovdev.ru`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+    networks:
+      - traefiknet
+
+  whoami:
+    image: "traefik/whoami"
+    container_name: "simple-service"
+    labels:
+      - "traefik.enable=true"
+      # FOR HTTP
+      - "traefik.http.routers.whoami-http.entrypoints=web"
+      - "traefik.http.routers.whoami-http.rule=Host(`whoami.lorlovdev.ru`)"
+      # REDIRECT HTTP TO HTTPS
+      - "traefik.http.routers.whoami-http.middlewares=whoami-https"
+      - "traefik.http.middlewares.whoami-https.redirectscheme.scheme=https"
+      # FOR HTTPS
+      - "traefik.http.routers.whoami.rule=Host(`whoami.lorlovdev.ru`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     networks:
       - traefiknet
 

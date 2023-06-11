@@ -14,7 +14,7 @@ services:
     volumes:
       - slim-fairy-postgres:/var/lib/postgresql/data
     networks:
-      - slim-fairy
+      - traefiknet
 
   #  web-service:
   #    container_name: slim-fairy-service
@@ -31,14 +31,21 @@ services:
     depends_on:
       - postgres
     command: ./tg-bot
+    ports:
+      - "8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`tg-bot.lorlovdev.ru`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     networks:
-      - slim-fairy
+      - traefiknet
 
 volumes:
   slim-fairy-postgres:
     driver: local
 
 networks:
-  slim-fairy:
+  traefiknet:
     external: true
-    name: slim-fairy
+    name: traefiknet

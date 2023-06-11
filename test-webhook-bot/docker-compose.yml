@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  test-webhook-bot:
+    container_name: test-webhook-bot
+    build: .
+    command: /app/server
+    ports:
+      - "8080"
+    environment:
+      TOKEN: ${TOKEN}
+      WEBHOOK_DOMAIN: ${WEBHOOK_DOMAIN}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`${WEBHOOK_DOMAIN}`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+    networks:
+      - traefiknet
+
+networks:
+  traefiknet:
+    external: true
+    name: traefiknet

@@ -7,3 +7,15 @@ services:
     command: /app/server
     ports:
       - "8081:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`test.lorlovdev.ru`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+    networks:
+      - traefiknet
+
+networks:
+  traefiknet:
+    external: true
+    name: traefiknet

@@ -67,6 +67,9 @@ services:
       - "traefik.http.routers.whoami.rule=Host(`whoami.lorlovdev.ru`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+      # Basic Auth for whoami
+      - 'traefik.http.routers.whoami.middlewares=whoami-auth'
+      - 'traefik.http.middlewares.whoami-auth.basicauth.users=admin:admin'
     networks:
       - traefiknet
 

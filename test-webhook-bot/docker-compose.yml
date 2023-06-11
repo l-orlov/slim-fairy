@@ -16,7 +16,7 @@ services:
       - "traefik.http.routers.test-webhook-bot.rule=Host(`${WEBHOOK_DOMAIN}`)"
       - "traefik.http.routers.test-webhook-bot.entrypoints=websecure"
       - "traefik.http.routers.test-webhook-bot.tls.certresolver=myresolver"
-      - "traefik.http.services.test-webhook-bot.loadbalancer.server.port=8081"
+#      - "traefik.http.services.test-webhook-bot.loadbalancer.server.port=8081"
     networks:
       - traefiknet
 

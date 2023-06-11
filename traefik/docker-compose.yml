@@ -16,6 +16,10 @@ services:
   # stop container:
   # docker-compose down
 
+  # generate password for Basic Auth:
+  # apt-get install apache2-utils
+  # echo $(htpasswd -nbB USER "PASS") | sed -e s/\\$/\\$\\$/g
+
   traefik:
     image: "traefik:v2.10"
     container_name: "traefik"
@@ -69,7 +73,7 @@ services:
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
       # Basic Auth for whoami
       - 'traefik.http.routers.whoami.middlewares=whoami-auth'
-      - 'traefik.http.middlewares.whoami-auth.basicauth.users=admin:admin'
+      - 'traefik.http.middlewares.whoami-auth.basicauth.users=admin:$$2y$$05$$MUld4.4WED/v9BKRbFEEXukaBQjr0viATgN789BhoMWws.oy1guMu'
     networks:
       - traefiknet
 

@@ -2,6 +2,8 @@ version: '3.7'
 
 services:
 
+  # docs: https://gmasil.de/docker/configure-traefik
+
   # run this to create external network:
   # docker network create traefiknet
 
@@ -39,16 +41,20 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
       - "traefik.enable=true"
-      # FOR HTTP
-      - "traefik.http.routers.traefik-http.entrypoints=web"
-      - "traefik.http.routers.traefik-http.rule=Host(`traefik.lorlovdev.ru`)"
-      # REDIRECT HTTP TO HTTPS
-      - "traefik.http.routers.traefik-http.middlewares=traefik-https"
-      - "traefik.http.middlewares.traefik-https.redirectscheme.scheme=https"
-      # FOR HTTPS
-      - "traefik.http.routers.traefik.rule=Host(`traefik.lorlovdev.ru`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      # Redirecting HTTP to HTTPS
+      - "traefik.http.middlewares.httpsonly.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.httpsonly.redirectscheme.permanent=true"
+      - "traefik.http.routers.httpsonly.rule=HostRegexp(`{any:.*}`)"
+      - "traefik.http.routers.httpsonly.middlewares=httpsonly"
+      # Traefik dashboard
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.lorlovdev.ru`)"
+      - "traefik.http.routers.dashboard.service=dashboard@internal"
+      - "traefik.http.routers.api.rule=Host(`traefik.lorlovdev.ru`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+      - "traefik.http.routers.api.tls=true"
+      - "traefik.http.routers.api.tls.certresolver=myresolver"
     networks:
       - traefiknet
 
@@ -57,13 +63,6 @@ services:
     container_name: "simple-service"
     labels:
       - "traefik.enable=true"
-      # FOR HTTP
-      - "traefik.http.routers.whoami-http.entrypoints=web"
-      - "traefik.http.routers.whoami-http.rule=Host(`whoami.lorlovdev.ru`)"
-      # REDIRECT HTTP TO HTTPS
-      - "traefik.http.routers.whoami-http.middlewares=whoami-https"
-      - "traefik.http.middlewares.whoami-https.redirectscheme.scheme=https"
-      # FOR HTTPS
       - "traefik.http.routers.whoami.rule=Host(`whoami.lorlovdev.ru`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"

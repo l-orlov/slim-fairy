@@ -15,6 +15,9 @@ services:
   # show logs:
   # docker-compose logs -f
 
+  # stop container:
+  # docker-compose down
+
   # have 50 attempts with Let's Encrypt
 
   traefik:

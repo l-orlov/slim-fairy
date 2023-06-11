@@ -13,6 +13,9 @@ services:
   # show logs:
   # docker-compose logs -f
 
+  # stop container:
+  # docker-compose down
+
   traefik:
     image: "traefik:v2.10"
     container_name: "traefik"

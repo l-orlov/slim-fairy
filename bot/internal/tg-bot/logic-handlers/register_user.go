@@ -52,6 +52,16 @@ const userRegistrationStartInfo = `
 
 Начнем. Как вас зовут?`
 
+// Min and Max values for user parameters
+const (
+	minAge    = 12
+	maxAge    = 85
+	minWeight = 45
+	maxWeight = 250
+	minHeight = 130
+	maxHeight = 220
+)
+
 // StartUserRegistration starts user registration
 func (h *LogicHandlers) StartUserRegistration(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
 	var (
@@ -164,9 +174,9 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 		msg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
-	if ageNumber < 0 || ageNumber > 150 {
+	if ageNumber < minAge || ageNumber > maxAge {
 		// Not valid -> try again
-		msg = "Число не подходит для возраста. Попробуйте еще раз"
+		msg = fmt.Sprintf("Число не подходит для возраста. Ожидаемое значение: от %d до %d. Попробуйте еще раз", minAge, maxAge)
 		return nil
 	}
 
@@ -234,9 +244,9 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		msg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
-	if weight < 0 || weight > 300 {
+	if weight < minWeight || weight > maxWeight {
 		// Not valid -> try again
-		msg = "Число не подходит для веса. Попробуйте еще раз"
+		msg = fmt.Sprintf("Число не подходит для веса. Ожидаемое значение: от %d до %d. Попробуйте еще раз", minWeight, maxWeight)
 		return nil
 	}
 
@@ -305,9 +315,9 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		msg = "Нужно число. Попробуйте еще раз"
 		return nil
 	}
-	if height < 0 || height > 250 {
+	if height < minHeight || height > maxHeight {
 		// Not valid -> try again
-		msg = "Число не подходит для роста. Попробуйте еще раз"
+		msg = fmt.Sprintf("Число не подходит для роста. Ожидаемое значение: от %d до %d. Попробуйте еще раз", minHeight, maxHeight)
 		return nil
 	}
 

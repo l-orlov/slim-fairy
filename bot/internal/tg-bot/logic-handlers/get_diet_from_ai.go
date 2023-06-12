@@ -424,7 +424,7 @@ func (h *LogicHandlers) sendDiet(b *gotgbot.Bot, ctx *ext.Context, diet string) 
 
 	const caption = `
 Вот диета для вас от ИИ (Искусственного Интеллекта).
-Она носит рекомендательный характер. Так как ИИ порой ошибается.
+Она носит рекомендательный характер.
 Для получения более подходящей диеты обратитесь к диетологу:
 /getdiet`
 	err := sendDocument(b, ctx, reader, menuFileName, caption)

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	model2 "github.com/l-orlov/slim-fairy/bot/internal/model"
+	"github.com/l-orlov/slim-fairy/bot/internal/model"
 )
 
 // Column names for models
@@ -19,11 +19,11 @@ var (
 
 func init() {
 	// Init column names for models
-	asteriskUsers = asterisk(model2.User{})
-	asteriskNutritionists = asterisk(model2.Nutritionist{})
-	asteriskAuthData = asterisk(model2.AuthData{})
-	asteriskChatBotDialogs = asterisk(model2.ChatBotDialog{})
-	asteriskAIAPILogs = asterisk(model2.AIAPILog{})
+	asteriskUsers = asterisk(model.User{})
+	asteriskNutritionists = asterisk(model.Nutritionist{})
+	asteriskAuthData = asterisk(model.AuthData{})
+	asteriskChatBotDialogs = asterisk(model.ChatBotDialog{})
+	asteriskAIAPILogs = asterisk(model.AIAPILog{})
 }
 
 type tableNameGetter interface {

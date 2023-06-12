@@ -9,8 +9,8 @@ import (
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
-	model2 "github.com/l-orlov/slim-fairy/bot/internal/model"
-	store2 "github.com/l-orlov/slim-fairy/bot/internal/store"
+	"github.com/l-orlov/slim-fairy/bot/internal/model"
+	"github.com/l-orlov/slim-fairy/bot/internal/store"
 	"github.com/l-orlov/slim-fairy/bot/pkg/ptrconv"
 	"github.com/pkg/errors"
 )
@@ -77,7 +77,7 @@ func (h *LogicHandlers) StartUserRegistration(b *gotgbot.Bot, ctx *ext.Context) 
 		needEndConversation = true
 		return nil
 	}
-	if err != nil && !errors.Is(err, store2.ErrNotFound) {
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
 		log.Printf("h.storage.GetUserByTelegramID: %v", err)
 
 		// Error -> try again
@@ -120,13 +120,13 @@ func (h *LogicHandlers) RegisterUserName(b *gotgbot.Bot, ctx *ext.Context) (next
 	name := html.EscapeString(input)
 
 	// Create dialog data
-	dialogData := &model2.ChatBotDialogDataUserRegistration{
+	dialogData := &model.ChatBotDialogDataUserRegistration{
 		Name: ptrconv.Ptr(name),
 	}
-	dialog := &model2.ChatBotDialog{
+	dialog := &model.ChatBotDialog{
 		UserTelegramID: ctx.EffectiveSender.Id(),
-		Kind:           model2.ChatBotDialogKindUserRegistration,
-		Status:         model2.ChatBotDialogStatusInProgress,
+		Kind:           model.ChatBotDialogKindUserRegistration,
+		Status:         model.ChatBotDialogStatusInProgress,
 		DataJSON:       dialogData.ToJSON(),
 	}
 	err := h.storage.CreateChatBotDialog(context.Background(), dialog)
@@ -176,8 +176,8 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
 		ctx.EffectiveSender.Id(),
-		model2.ChatBotDialogKindUserRegistration,
-		model2.ChatBotDialogStatusInProgress,
+		model.ChatBotDialogKindUserRegistration,
+		model.ChatBotDialogStatusInProgress,
 	)
 	if err != nil {
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
@@ -187,10 +187,10 @@ func (h *LogicHandlers) RegisterUserAge(b *gotgbot.Bot, ctx *ext.Context) (nextS
 		return nil
 	}
 
-	dialogData := &model2.ChatBotDialogDataUserRegistration{}
+	dialogData := &model.ChatBotDialogDataUserRegistration{}
 	err = dialogData.FromJSON(dialog.DataJSON)
 	if err != nil {
-		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
+		log.Printf("UserRegistration.FromJSON: %v", err)
 
 		// Error -> try again
 		msg = errMsg
@@ -246,8 +246,8 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
 		ctx.EffectiveSender.Id(),
-		model2.ChatBotDialogKindUserRegistration,
-		model2.ChatBotDialogStatusInProgress,
+		model.ChatBotDialogKindUserRegistration,
+		model.ChatBotDialogStatusInProgress,
 	)
 	if err != nil {
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
@@ -257,10 +257,10 @@ func (h *LogicHandlers) RegisterUserWeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		return nil
 	}
 
-	dialogData := &model2.ChatBotDialogDataUserRegistration{}
+	dialogData := &model.ChatBotDialogDataUserRegistration{}
 	err = dialogData.FromJSON(dialog.DataJSON)
 	if err != nil {
-		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
+		log.Printf("UserRegistration.FromJSONs: %v", err)
 
 		// Error -> try again
 		msg = errMsg
@@ -317,8 +317,8 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
 		ctx.EffectiveSender.Id(),
-		model2.ChatBotDialogKindUserRegistration,
-		model2.ChatBotDialogStatusInProgress,
+		model.ChatBotDialogKindUserRegistration,
+		model.ChatBotDialogStatusInProgress,
 	)
 	if err != nil {
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
@@ -328,10 +328,10 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 		return nil
 	}
 
-	dialogData := &model2.ChatBotDialogDataUserRegistration{}
+	dialogData := &model.ChatBotDialogDataUserRegistration{}
 	err = dialogData.FromJSON(dialog.DataJSON)
 	if err != nil {
-		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
+		log.Printf("UserRegistration.FromJSON: %v", err)
 
 		// Error -> try again
 		msg = errMsg
@@ -367,17 +367,17 @@ func (h *LogicHandlers) RegisterUserHeight(b *gotgbot.Bot, ctx *ext.Context) (ne
 
 // RegisterUserGenderMale registers user gender with Male value
 func (h *LogicHandlers) RegisterUserGenderMale(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
-	return h.registerUserGender(b, ctx, model2.GenderMale)
+	return h.registerUserGender(b, ctx, model.GenderMale)
 }
 
 // RegisterUserGenderFemale registers user gender with Female value
 func (h *LogicHandlers) RegisterUserGenderFemale(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
-	return h.registerUserGender(b, ctx, model2.GenderFemale)
+	return h.registerUserGender(b, ctx, model.GenderFemale)
 }
 
 // registerUserGender registers user gender
 func (h *LogicHandlers) registerUserGender(
-	b *gotgbot.Bot, ctx *ext.Context, gender model2.Gender,
+	b *gotgbot.Bot, ctx *ext.Context, gender model.Gender,
 ) (nextState error) {
 	var (
 		msg     string
@@ -395,8 +395,8 @@ func (h *LogicHandlers) registerUserGender(
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
 		ctx.EffectiveSender.Id(),
-		model2.ChatBotDialogKindUserRegistration,
-		model2.ChatBotDialogStatusInProgress,
+		model.ChatBotDialogKindUserRegistration,
+		model.ChatBotDialogStatusInProgress,
 	)
 	if err != nil {
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
@@ -406,10 +406,10 @@ func (h *LogicHandlers) registerUserGender(
 		return nil
 	}
 
-	dialogData := &model2.ChatBotDialogDataUserRegistration{}
+	dialogData := &model.ChatBotDialogDataUserRegistration{}
 	err = dialogData.FromJSON(dialog.DataJSON)
 	if err != nil {
-		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
+		log.Printf("UserRegistration.FromJSON: %v", err)
 
 		// Error -> try again
 		msg = errMsg
@@ -461,22 +461,22 @@ func (h *LogicHandlers) registerUserGender(
 
 // RegisterUserPhysicalActivityLow registers user physical activity with Low value
 func (h *LogicHandlers) RegisterUserPhysicalActivityLow(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
-	return h.registerUserPhysicalActivity(b, ctx, model2.PhysicalActivityLevelLow)
+	return h.registerUserPhysicalActivity(b, ctx, model.PhysicalActivityLevelLow)
 }
 
 // RegisterUserPhysicalActivityMedium registers user physical activity with Medium value
 func (h *LogicHandlers) RegisterUserPhysicalActivityMedium(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
-	return h.registerUserPhysicalActivity(b, ctx, model2.PhysicalActivityLevelMedium)
+	return h.registerUserPhysicalActivity(b, ctx, model.PhysicalActivityLevelMedium)
 }
 
 // RegisterUserPhysicalActivityHigh registers user physical activity with High value
 func (h *LogicHandlers) RegisterUserPhysicalActivityHigh(b *gotgbot.Bot, ctx *ext.Context) (nextState error) {
-	return h.registerUserPhysicalActivity(b, ctx, model2.PhysicalActivityLevelHigh)
+	return h.registerUserPhysicalActivity(b, ctx, model.PhysicalActivityLevelHigh)
 }
 
 // registerUserPhysicalActivity registers user physical activity
 func (h *LogicHandlers) registerUserPhysicalActivity(
-	b *gotgbot.Bot, ctx *ext.Context, activityLevel model2.PhysicalActivityLevel,
+	b *gotgbot.Bot, ctx *ext.Context, activityLevel model.PhysicalActivityLevel,
 ) (nextState error) {
 	var (
 		msg                 string
@@ -501,8 +501,8 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
 		ctx.EffectiveSender.Id(),
-		model2.ChatBotDialogKindUserRegistration,
-		model2.ChatBotDialogStatusInProgress,
+		model.ChatBotDialogKindUserRegistration,
+		model.ChatBotDialogStatusInProgress,
 	)
 	if err != nil {
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
@@ -512,10 +512,10 @@ func (h *LogicHandlers) registerUserPhysicalActivity(
 		return nil
 	}
 
-	dialogData := &model2.ChatBotDialogDataUserRegistration{}
+	dialogData := &model.ChatBotDialogDataUserRegistration{}
 	err = dialogData.FromJSON(dialog.DataJSON)
 	if err != nil {
-		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
+		log.Printf("UserRegistration.FromJSON: %v", err)
 
 		// Error -> try again
 		msg = errMsg
@@ -612,8 +612,8 @@ func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Cont
 	dialog, err := h.storage.GetChatBotDialogByKeyFields(
 		dbCtx,
 		ctx.EffectiveSender.Id(),
-		model2.ChatBotDialogKindUserRegistration,
-		model2.ChatBotDialogStatusInProgress,
+		model.ChatBotDialogKindUserRegistration,
+		model.ChatBotDialogStatusInProgress,
 	)
 	if err != nil {
 		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
@@ -623,10 +623,10 @@ func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Cont
 		return nil
 	}
 
-	dialogData := &model2.ChatBotDialogDataUserRegistration{}
+	dialogData := &model.ChatBotDialogDataUserRegistration{}
 	err = dialogData.FromJSON(dialog.DataJSON)
 	if err != nil {
-		log.Printf("h.storage.GetChatBotDialogByKeyFields: %v", err)
+		log.Printf("UserRegistration.FromJSON: %v", err)
 
 		// Error -> try again
 		msg = errMsg
@@ -634,13 +634,13 @@ func (h *LogicHandlers) ConfirmUserRegistrationYes(b *gotgbot.Bot, ctx *ext.Cont
 	}
 
 	user := buildUserFromDialogData(dialog.UserTelegramID, dialogData)
-	txErr := h.storage.WithTransaction(dbCtx, func(tx store2.Tx) error {
+	txErr := h.storage.WithTransaction(dbCtx, func(tx store.Tx) error {
 		err = h.storage.CreateUserTx(dbCtx, tx, user)
 		if err != nil {
 			return errors.Wrap(err, "h.storage.CreateUserTx")
 		}
 
-		err = h.storage.UpdateChatBotDialogStatusTx(dbCtx, tx, model2.ChatBotDialogStatusCompleted, dialog.ID)
+		err = h.storage.UpdateChatBotDialogStatusTx(dbCtx, tx, model.ChatBotDialogStatusCompleted, dialog.ID)
 		if err != nil {
 			return errors.Wrap(err, "h.storage.UpdateChatBotDialogStatusTx")
 		}
@@ -701,15 +701,15 @@ func (h *LogicHandlers) ConfirmUserRegistrationNo(b *gotgbot.Bot, ctx *ext.Conte
 	return endConversation(b, ctx, msg)
 }
 
-func buildUserFromDialogData(telegramID int64, data *model2.ChatBotDialogDataUserRegistration) *model2.User {
-	user := &model2.User{
+func buildUserFromDialogData(telegramID int64, data *model.ChatBotDialogDataUserRegistration) *model.User {
+	user := &model.User{
 		TelegramID:       ptrconv.Ptr(telegramID),
 		Age:              data.Age,
 		Weight:           data.Weight,
 		Height:           data.Height,
 		Gender:           data.Gender,
 		PhysicalActivity: data.PhysicalActivity,
-		CreatedBy:        model2.UserCreatedByChatbot,
+		CreatedBy:        model.UserCreatedByChatbot,
 	}
 	if data.Name != nil {
 		user.Name = *data.Name

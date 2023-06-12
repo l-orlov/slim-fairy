@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	model2 "github.com/l-orlov/slim-fairy/bot/internal/model"
+	"github.com/l-orlov/slim-fairy/bot/internal/model"
 	"github.com/l-orlov/slim-fairy/bot/internal/store"
 	"github.com/l-orlov/slim-fairy/bot/pkg/ptrconv"
 	"github.com/pkg/errors"
@@ -11,9 +11,9 @@ import (
 
 // RegisterUser registers user
 func (svc *Service) RegisterUser(
-	ctx context.Context, userToReg *model2.UserToRegister,
-) (*model2.User, error) {
-	user := &model2.User{
+	ctx context.Context, userToReg *model.UserToRegister,
+) (*model.User, error) {
+	user := &model.User{
 		Name:   userToReg.Name,
 		Email:  ptrconv.Ptr(userToReg.Email),
 		Phone:  ptrconv.Ptr(userToReg.Phone),
@@ -23,13 +23,13 @@ func (svc *Service) RegisterUser(
 		Gender: ptrconv.Ptr(userToReg.Gender),
 	}
 
-	password, err := model2.HashPassword(userToReg.Password)
+	password, err := model.HashPassword(userToReg.Password)
 	if err != nil {
 		return nil, errors.Wrap(err, "model.HashPassword")
 	}
 
-	authData := &model2.AuthData{
-		SourceType: model2.AuthDataSourceTypeUser,
+	authData := &model.AuthData{
+		SourceType: model.AuthDataSourceTypeUser,
 		Password:   password,
 	}
 

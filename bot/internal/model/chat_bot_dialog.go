@@ -78,13 +78,14 @@ func (data *ChatBotDialogDataUserRegistration) IsFilled() bool {
 		data.Height != nil && data.Gender != nil && data.PhysicalActivity != nil
 }
 
-// ChatBotDialogDataGetDiet .
-type ChatBotDialogDataGetDiet struct {
-	Params GetDietParams `json:"params"`
+// ChatBotDialogDataGetDietFromAI .
+type ChatBotDialogDataGetDietFromAI struct {
+	Params    GetDietParams `json:"params"`
+	NeedOrder *bool         `json:"need_order,omitempty"`
 }
 
 // ToJSON marshals data to JSON string
-func (data *ChatBotDialogDataGetDiet) ToJSON() string {
+func (data *ChatBotDialogDataGetDietFromAI) ToJSON() string {
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("ChatBotDialogDataUserRegistration.ToJSON: %v", err)
@@ -94,6 +95,6 @@ func (data *ChatBotDialogDataGetDiet) ToJSON() string {
 }
 
 // FromJSON unmarshals data form JSON string
-func (data *ChatBotDialogDataGetDiet) FromJSON(s string) error {
+func (data *ChatBotDialogDataGetDietFromAI) FromJSON(s string) error {
 	return json.Unmarshal([]byte(s), data)
 }

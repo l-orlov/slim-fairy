@@ -108,6 +108,10 @@ func New(
 				handlers.NewCallback(callbackquery.Equal(logic_handlers.GetDietFromAICbSelectSnacks1), logicHandlers.SelectSnacks1),
 				handlers.NewCallback(callbackquery.Equal(logic_handlers.GetDietFromAICbSelectSnacks2), logicHandlers.SelectSnacks2),
 			},
+			logic_handlers.GetDietFromAISelectOrderProducts: {
+				handlers.NewCallback(callbackquery.Equal(logic_handlers.GetDietFromAISelectOrderProductsYes), logicHandlers.SelectOrderProductsYes),
+				handlers.NewCallback(callbackquery.Equal(logic_handlers.GetDietFromAISelectOrderProductsNo), logicHandlers.SelectOrderProductsNo),
+			},
 		},
 		&handlers.ConversationOpts{
 			Exits:        []ext.Handler{handlers.NewCommand("cancel", logicHandlers.CancelGettingDiet)},

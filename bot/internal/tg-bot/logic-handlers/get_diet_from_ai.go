@@ -75,6 +75,11 @@ const (
 
 const sbermarketURL = "https://sbermarket.ru/"
 
+/* TODO:
+лимит - 7 запросов в 1 день.
+А дальше идите в платную версию
+*/
+
 // StartGettingDietFromAI .
 func (h *LogicHandlers) StartGettingDietFromAI(b *gotgbot.Bot, ctx *ext.Context) error {
 	opts := &gotgbot.SendMessageOpts{
